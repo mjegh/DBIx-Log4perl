@@ -1,0 +1,171 @@
+Revision history for Perl extension DBIx::Log4perl.
+
+0.08  Fri September 1 2006
+
+  Bump to 0.08.
+
+  Fix minor bug in pod "$dbh - DBIx::Log4perl->connect(..." should
+  be "=" not "-".
+
+  Fix bug in pod with DBIx_l4p_class.
+
+  In execute_array handle case where it does not insert/update anything
+  so we report the number of affected rows as 0.
+
+  In execute_array we add an ArrayTupleStatus if one was no provided so
+  the later code which looks for ArrayTupleStatus being set is redundant.
+
+  Further fixes to execute_array due to misreading the DBI
+  specification. execute_array returns undef for error or the number
+  of tuples executed.  DBIx::Log4perl was incorrectly assuming the
+  execute_array return was the number of affected rows. NOTE most DBDs
+  don't return the correct values anyway - see note in st.pm.
+
+  Added support for new array context supporting execute_array to be
+  added in DBI 1.53.
+
+  Fix bug in Makefile.PL causing DBI_PASS to be ignored during testing.
+
+  Default test table to "drop_me_dbixl4p"
+
+  Disable PrintError in simple.t when test table is being dropped in
+  case it does not exist.
+
+  Log ArrayTupleStatus in execute_array calls.
+
+0.07  Tues July 25 2006
+
+  Fix bug in execute_array which did not handle scalars in parameter
+  list for execute array. e.g.
+
+  execute_array(undef,
+	        \@p1_list, # OK
+	        $p2 # was not handled properly
+  )
+
+  Added support to execute_array to automatically add an
+  ArrayTupleStatus if one was not specified so DBIx::Log4perl can log
+  errors in execute_array.
+
+  Fixed bug in execute_array where comparison with logging mask
+  was && instead of &.
+
+  Fixed bug in execute_array which did not handle passing undef
+  attributes as first argument to execute_array.
+
+  Added missing support for finish method in DBI.
+
+  Added missing support for prepare_cached method in DBI.
+
+  Added missing support for get_info method in DBI.
+
+0.06  Fri Jun 23 2006
+
+  Added example captured error and description to POD.
+
+  Fix problem where attribute DBIx_l4p_logmask was not documented
+  properly and was not acted upon.
+
+  execute_array was logging errors even when not asked to.
+
+  Fix problem where error handler was not put in place unless some
+  attributes are passed in the connect method.
+
+  Fix unitialised string in ne in the do method if the do method in
+  the driver failed.
+
+  Changes to Captured error output:
+    reformatted to be more readable
+    differentiate DBI::lasth Statement from SQL on other handles
+    Collect sub statements off and dbh and output any values and
+      ParamValues at the end.
+    Fix bug dereferencing Statement from private__DBIx_Log4perl handle
+      instead of the dbh.
+    Add Kids and ActiveKids output
+    ParamValues for some methods where the statement was already
+      destroyed e.g. a failed do, were not output in the captured
+      error because they were not saved.
+
+  Change error handler to display true number of sub statements
+  (ChildHandles) under a dbh instead of the index of the last child
+  handle i.e. show 0 not -1 for none. Add missing newline in output.
+
+  Avoid problem in global cleanup with
+  "(in cleanup) Can't call method "FETCH" on an undefined value" message
+  when disconnect not called.
+
+  Avoid logging of do method calls showing prepare/execute and affected
+  logging.
+
+0.05  Fri Jun 16 2006
+
+  Fixed a few typos in the pod.
+
+  Fixed bug in DBIx::Log4perl::prepare which was causing a non-Null
+  statement handle to be returned when the driver's prepare method
+  failed. When this handle was then used to execute a statement
+  DBI would spot it was not a proper handle and complain with:
+
+    dbih_getcom handle HASH(0x8c995d8) is not a DBI handle (has no magic)
+    at /usr/lib/perl5/site_perl/5.8.8/DBIx/Log4perl/db.pm line 61
+
+  and you might have seen something like the following on stderr for
+  your Perl application:
+
+    SV = RV(0x89a8e70) at 0x8e19950
+    REFCNT = 1
+    FLAGS = (TEMP,ROK)
+    RV = 0x8c995d8
+
+  Fixed issue in the error handler which does not handle ParamValues
+  hash keys having undefined values.
+
+  Fixed issue in _dbix_l4p_debug which was stopping calls to
+  $sth->execute without any arguments being logged.
+
+  Fixed typo in test skipped message in simple.t
+
+0.04  Sun May 21 2006
+
+  Additional tests mentioned in 0.03 omitted from MANIFEST
+
+  Add requirement on Test::more 0.62 because we are using
+  Test::Mores' BAIL_OUT.
+
+  Updated README to include instructions on defining your database
+  connection.
+
+0.03  Sat May 20 2006
+
+  If a statement is executed with $sth->execute and it changes rows
+  then log the affected rows.
+
+  Added more tests and support for setting DB login details.
+
+0.02  Mon Apr 24 2006
+
+  Internal error handler changes:
+    The message passed to the internal error handler was never written to
+      the log file.
+    The $dbi Statement attribute was not being logged to the log file
+
+  Add new dbix_l4p_logdie method
+
+  README changes
+
+  Don't output "execute: undef" is execute is called with no args,
+  just output "execute:"
+
+  Add $DBI::lasth->{Type} and $DBI::lasth->{Statement} output to
+  error_handler
+
+  When do called, save SQL in Statement. This is because if an app
+  calls do for an insert/update/delete and the operation succeeds (in
+  DBI terms) BUT the app knows it has logically failed (e.g. inserted
+  0 rows when it expected 1) the app may call dbix_l4p_logdie and we
+  want the SQL to be visible.
+
+0.01  Mon Apr  3 16:10:52 2006
+	- original version; created by h2xs 1.23 with options
+		-A -X --compat-version=5.8.4 --use-new-tests -v 0.01 -n DBIx::Log4perl
+
