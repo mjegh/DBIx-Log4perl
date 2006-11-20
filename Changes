@@ -33,6 +33,9 @@ Revision history for Perl extension DBIx::Log4perl.
 
   Log ArrayTupleStatus in execute_array calls.
 
+  Fix rt.cpan.org issue 23500. File::Spec::tmpdir might not return a
+  directory on Windows. Test before attempting to use it.
+
 0.07  Tues July 25 2006
 
   Fix bug in execute_array which did not handle scalars in parameter
