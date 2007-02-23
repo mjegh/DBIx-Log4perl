@@ -1,5 +1,27 @@
 Revision history for Perl extension DBIx::Log4perl.
 
+0.09  Fri February 23 2007
+
+  Dump to 0.09.
+
+  Add new DBIX_L4P_LOG_DBDSPECIFIC constant and add it to the default logging.
+  If DBIX_L4P_LOG_DBDSPECIFIC is set (it is by default) and the driver is
+  DBD::Oracle then enable dbms_output.
+  Change the statement execute method to retrieve DBD::Oracle dbms_output
+  buffer and write to the log file under DEBUG level.
+
+  Change some dies to croaks where we want the error to be reported in
+  the application's context - e.g. wrong number of args passed in.
+
+  In execute method fix a small bug using logical and instead of
+  bitwise and to check whether we are logging errors.
+
+  In bind_param_inout, don't log if the caller is DBD::something as
+  this is an internal call from a DBD e.g. when you call
+  func('dbms_output_get') in DBD::Oracle it prepares/executes and bind
+  parameters and we don't want this logged.
+
+
 0.08  Fri September 1 2006
 
   Bump to 0.08.

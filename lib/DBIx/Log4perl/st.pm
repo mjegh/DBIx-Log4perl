@@ -16,21 +16,66 @@ sub finish {
 	if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
     return $sth->SUPER::finish;
 }
-	    
+
+#
+# NOTE: execute can be called from the DBD. Now we support retrieving
+# dbms_output from DBD::Oracle we need a flag to say we are in the
+# 'dbms_output_get' or when we call dbms_output_get we will log a second
+# execute and potentially recurse until we run out of stack.
+# We use the "dbd_specific" flag since we may need it for other
+# drivers in the future and that is the logging flag we implement dbms_output
+# fetching under
+#
 sub execute {
     my ($sth, @args) = @_;
     my $h = $sth->{private_DBIx_Log4perl};
 
     $sth->_dbix_l4p_debug('execute', @args)
-      if (($h->{logmask} & DBIX_L4P_LOG_INPUT) && (caller !~ /^DBD::/));
+      if (($h->{logmask} & DBIX_L4P_LOG_INPUT) &&
+	  (caller !~ /^DBD::/) &&
+	  (!$h->{dbd_specific}));
 
     my $ret = $sth->SUPER::execute(@args);
 
+    #
+    # If DBDSPECIFIC is enabled and this is DBD::Oracle we will attempt to
+    # to retrieve any dbms_output. However, 'dbms_output_get' actually
+    # creates a new statement, prepares it, executes it, binds parameters
+    # and then fetches the dbms_output. This will cause this execute method
+    # to be called again and we could recurse forever. To prevent that
+    # happening we set {dbd_specific} flag before calling dbms_output_get
+    # and clear it afterwards.
+    #
+    # Also in DBI (at least up to 1.54) and most DBDs, the same memory is
+    # used for a dbh errstr/err/state and each statement under it. As a
+    # result, if you sth1->execute (it fails) then $sth2->execute which
+    # succeeds, sth1->errstr/err are undeffed :-(
+    # see http://www.nntp.perl.org/group/perl.dbi.users/2007/02/msg30971.html
+    # To sort this out, we save the errstr/err/state on the first sth
+    # and put them back after using the second sth (ensuring we temporarily
+    # turn off any error handler to avoid set_err calling them again).
+    #
+    if (($h->{logmask} & DBIX_L4P_LOG_DBDSPECIFIC) &&
+    	($h->{driver} eq 'Oracle') && (!$h->{dbd_specific})) {
+	my ($errstr, $err, $state) = (
+	    $sth->errstr, $sth->err, $sth->state);
+    	$h->{dbd_specific} = 1;
+    	my $dbh = $sth->FETCH('Database');
+    	my @d = $dbh->func('dbms_output_get');
+    	$sth->_dbix_l4p_debug('dbms', @d) if scalar(@d);
+    	$h->{dbd_specific} = 0;
+	{
+	    local $sth->{HandleError} = undef;
+	    local $sth->{HandleSetErr} = undef;
+	    $sth->set_err($err, $errstr, $state);
+	}
+    }
+
     if (!$ret) {		# error
-	$h->{logger}->error("\tfailed with " . $sth->errstr)
-	    if (($h->{logmask} && DBIX_L4P_LOG_ERRCAPTURE) && # logging errors
+	$h->{logger}->error("\tfailed with " . DBI::neat($sth->errstr))
+	    if (($h->{logmask} & DBIX_L4P_LOG_ERRCAPTURE) && # logging errors
 		(caller !~ /^DBD::/)); # not called from DBD e.g. execute_array
-    } elsif (defined($ret)) {
+    } elsif (defined($ret) && (!$h->{dbd_specific})) {
         $sth->_dbix_l4p_debug('affected', $ret)
 	    if ((!defined($sth->{NUM_OF_FIELDS})) && # not a result-set
 		($h->{logmask} & DBIX_L4P_LOG_INPUT)	&& # logging input
@@ -64,6 +109,7 @@ sub execute_array {
     # (e.g. DBD::Oracle) don't do this properly (e.g. DBD::Oracle 1.18a).
     # As a result, until this is sorted out, our logging of execute_array
     # may be less than accurate.
+    # NOTE: DBD::Oracle 1.19 iw working now from my supplied patch
     #
     my ($executed, $affected) = $sth->SUPER::execute_array(@args);
     if (!$executed) {
@@ -117,7 +163,8 @@ sub bind_param_inout {
   my $h = $sth->{private_DBIx_Log4perl};
 
   $sth->_dbix_l4p_debug('bind_param_inout', @args)
-    if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+    if (($h->{logmask} & DBIX_L4P_LOG_INPUT) &&
+	(caller !~ /^DBD::/));
   return $sth->SUPER::bind_param_inout(@args);
 }
 

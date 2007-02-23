@@ -3,7 +3,7 @@ require 5.008;
 
 use strict;
 use warnings;
-use Carp;
+use Carp qw(croak);
 use Log::Log4perl;
 use Data::Dumper;
 
@@ -12,7 +12,7 @@ use DBIx::Log4perl::Constants qw (:masks $LogMask);
 use DBIx::Log4perl::db;
 use DBIx::Log4perl::st;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 require Exporter;
 our @ISA = qw(Exporter DBI);		# look in DBI for anything we don't do
 
@@ -25,6 +25,8 @@ our @EXPORT_MASKS = qw(DBIX_L4P_LOG_DEFAULT
 		       DBIX_L4P_LOG_TXN
 		       DBIX_L4P_LOG_ERRCAPTURE
 		       DBIX_L4P_LOG_WARNINGS
+		       DBIX_L4P_LOG_ERRORS
+		       DBIX_L4P_LOG_DBDSPECIFIC
 		     );
 our %EXPORT_TAGS= (masks => \@EXPORT_MASKS);
 Exporter::export_ok_tags('masks'); # all tags must be in EXPORT_OK
@@ -98,7 +100,7 @@ sub _dbix_l4p_attr_map {
 sub dbix_l4p_getattr {
     my ($self, $item) = @_;
 
-    die "wrong arguments - dbix_l4p_getattr(attribute_name)"
+    croak ('wrong arguments - dbix_l4p_getattr(attribute_name)')
       if (scalar(@_) != 2 || !defined($_[1]));
 
     my $m = _dbix_l4p_attr_map();
@@ -115,7 +117,7 @@ sub dbix_l4p_getattr {
 sub dbix_l4p_setattr {
     my ($self, $item, $value) = @_;
 
-    die "wrong arguments - dbix_l4p_setattr(attribute_name, value)"
+    croak ('wrong arguments - dbix_l4p_setattr(attribute_name, value)')
       if (scalar(@_) != 3 || !defined($_[1]));
 
     my $m = _dbix_l4p_attr_map();
@@ -261,7 +263,7 @@ sub connect {
       # check we have not got DBIx_l4p_init without DBIx_l4p_log or vice versa
 	my ($a, $b) = (exists($attr->{DBIx_l4p_init}),
 		       exists($attr->{DBIx_l4p_class}));
-	die "DBIx_l4p_init specified without DBIx_l4p_class or vice versa"
+	croak ('DBIx_l4p_init specified without DBIx_l4p_class or vice versa')
 	  if (($a xor $b));
 	# if passed a Log4perl log handle use that
 	if (exists($attr->{DBIx_l4p_logger})) {
@@ -304,6 +306,7 @@ sub connect {
     my $dbh = $drh->SUPER::connect($dsn, $user, $pass, $attr);
     return $dbh if (!$dbh);
 
+    $h{dbd_specific} = 0;
     $dbh->{private_DBIx_Log4perl} = \%h;
     if ($h{logmask} & DBIX_L4P_LOG_CONNECT) {
 	$h{logger}->debug("connect: $dsn, $user");
@@ -314,6 +317,18 @@ sub connect {
 			   ", Driver: " . $dbh->{Driver}->{Name} . "(" .
 			     $$v . ")");
     }
+    #
+    # Enable dbms_output for DBD::Oracle else turn off DBDSPECIFIC as we have
+    # no support for DBDSPECIFIC in any other drivers.
+    #
+    $h{driver} = $dbh->{Driver}->{Name};
+    if (($h{logmask} & DBIX_L4P_LOG_DBDSPECIFIC) &&
+	    ($h{driver} eq 'Oracle')) {
+	$dbh->func('dbms_output_enable');
+    } else {
+	$h{logmask} &= ~DBIX_L4P_LOG_DBDSPECIFIC;
+    }
+
     return $dbh;
 }
 
@@ -411,7 +426,7 @@ may be ORed together to obtain the logging level you require:
 =item DBIX_L4P_LOG_DEFAULT
 
 By default LogMask is set to DBIX_L4P_LOG_DEFAULT which is currently
-DBIX_L4P_LOG_TXN | DBIC_L4P_LOG_CONNECT | DBIX_L4P_LOG_INPUT | DBIX_L4P_LOG_ERRCAPTURE | DBIX_L4P_LOG_ERRORS.
+DBIX_L4P_LOG_TXN | DBIC_L4P_LOG_CONNECT | DBIX_L4P_LOG_INPUT | DBIX_L4P_LOG_ERRCAPTURE | DBIX_L4P_LOG_ERRORS | DBIX_L4P_LOG_DBDSPECIFIC.
 
 =item DBIX_L4P_LOG_ALL
 
@@ -481,6 +496,28 @@ only handler which causes the error to be passed on. If you have
 defined your own error handler then whatever your handler returns is
 passed on.
 
+=item DBIX_L4P_LOG_DBDSPECIFIC
+
+This logging depends on the DBD you are using:
+
+=over 6
+
+=item DBD::Oracle
+
+Use DBD::Oracle's methods for obtaining the buffer containing
+dbms_output.put_line output. Whenever C<$dbh-E<gt>execute> is called
+DBIx::Log4perl will use C<$dbh-E<gt>func('dbms_output_get')> to obtain
+an array of lines written to the buffer with put_line. These will be
+written to the log (prefixed with "dbms") at level DEBUG for the
+execute method.
+
+NOTE: If L</DBIX_L4P_LOG_DBDSPECIFIC> is enabled, DBIx::Log4perl calls
+C<$dbh-E<gt>func(dbms_output_enable)> after the connect method has
+succeeded. This will use DBD::Oracle's default buffer size. If you want
+to change the buffer size see DBD::Oracle and change it after the connect
+method has returned.
+
+=back
 
 =back
 
