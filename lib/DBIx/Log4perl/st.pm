@@ -109,7 +109,7 @@ sub execute_array {
     # (e.g. DBD::Oracle) don't do this properly (e.g. DBD::Oracle 1.18a).
     # As a result, until this is sorted out, our logging of execute_array
     # may be less than accurate.
-    # NOTE: DBD::Oracle 1.19 iw working now from my supplied patch
+    # NOTE: DBD::Oracle 1.19 is working now from my supplied patch
     #
     my ($executed, $affected) = $sth->SUPER::execute_array(@args);
     if (!$executed) {
