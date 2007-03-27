@@ -12,7 +12,7 @@ use DBIx::Log4perl::Constants qw (:masks $LogMask);
 use DBIx::Log4perl::db;
 use DBIx::Log4perl::st;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 require Exporter;
 our @ISA = qw(Exporter DBI);		# look in DBI for anything we don't do
 
@@ -31,6 +31,12 @@ our @EXPORT_MASKS = qw(DBIX_L4P_LOG_DEFAULT
 our %EXPORT_TAGS= (masks => \@EXPORT_MASKS);
 Exporter::export_ok_tags('masks'); # all tags must be in EXPORT_OK
 
+
+BEGIN {
+    # when Log4perl logs where the log message was output get it to ignore
+    # the lowest 2 levels of the stack i.e. DBIx::Log4perl.
+    $Log::Log4perl::caller_depth = 2;
+}
 
 my $glogger;
 
@@ -596,9 +602,8 @@ use:
   log4perl.appender.A1.layout.ConversionPattern=%d %p> %F{1}:%L %M - %m%n
 
 to make Log4perl prefix the line with a timestamp, module name and
-filename but the latter two are not too useful since they will always
-report a position in DBIx::Log4perl instead of your module. I'd
-welcome any suggestion to get around this.
+filename. DBIx::Log4perl sets $Log::Log4perl::caller_depth=2 in it's
+BEGIN so Log4perl ignores the two lowest levels in the stack.
 
 =head1 FORMAT OF LOG
 

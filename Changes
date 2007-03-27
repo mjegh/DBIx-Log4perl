@@ -1,5 +1,13 @@
 Revision history for Perl extension DBIx::Log4perl.
 
+0.10  Tues March 27 2007
+
+  Changed BEGIN in DBIx::Log4perl to set Log::Log4perl::caller_depth to 2
+  so that when Log4perl logs where the message was output it ignores the
+  lowest 2 levels of the stack which are probably DBIx::Log4perl - thanks
+  to Michael Scoltock for pointing that out. If you really want the original
+  behavior do a $Log::Log4perl::caller_depth = 0 after connecting.
+
 0.09  Fri February 23 2007
 
   Dump to 0.09.
