@@ -131,7 +131,8 @@ sub execute_array {
 		    push @plist, $pa->{$p};
 		}
 	    }
-	    $h->{logger}->error(sub {"\t for " . join(',', @plist)});
+	    $h->{logger}->error(sub {"\t for " .
+				     join(',', map(DBI::neat($_), @plist))});
 	}
     } elsif ($executed) {
 	if ((defined($sth->{NUM_OF_FIELDS})) || # result-set
