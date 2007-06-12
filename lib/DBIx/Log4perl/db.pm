@@ -147,11 +147,11 @@ sub disconnect {
     if ($dbh) {
 	my $h;
 	eval {
-	    # Avoid 
+	    # Avoid
 	    # (in cleanup) Can't call method "FETCH" on an undefined value
 	    $h = $dbh->{private_DBIx_Log4perl};
 	};
-	if (!$@) {
+	if (!$@ && $h) {
 	    $h->{logger}->debug("disconnect")
 		if ($h->{logmask} & DBIX_L4P_LOG_CONNECT);
 	}
