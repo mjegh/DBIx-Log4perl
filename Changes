@@ -3,7 +3,8 @@ Revision history for Perl extension DBIx::Log4perl.
 0.10  Tues March 27 2007
 
   The disconnect code was not checking that our private handle in the
-  dbh was valid before using it to log a disconnect message.
+  dbh was valid before using it to log a disconnect message. It was also
+  not checking the logger handle was valid.
 
   In execute_array protect against concatenating a possible undef in
   the log message.
