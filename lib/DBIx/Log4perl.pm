@@ -779,8 +779,9 @@ This is the same issue as above for $h->{Username}.
 In DBD::ODBC 1.13 you cannot obtain ParamValues after an execute has
 failed. I believe this is because DBD::ODBC insists on describing a
 result-set before returning ParamValues and that is not necessary for
-ParamValues. I've mailed Jeff Urlwin about this and he is looking
-into it.
+ParamValues.
+
+Fixed in 1.14.
 
 =head2 DBD::mysql and ParamArrays
 
