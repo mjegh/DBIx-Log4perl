@@ -15,6 +15,17 @@ Revision history for Perl extension DBIx::Log4perl.
   to Michael Scoltock for pointing that out. If you really want the original
   behavior do a $Log::Log4perl::caller_depth = 0 after connecting.
 
+  If DBIX_L4P_LOG_DBDSPECIFIC was enabled the execute method could
+  make a lot of calls to DBD::Oracle's dbms_output_get method even
+  though logging was not enabled.
+
+  Minor change to _dbix_l4p_debug to speed it up when logging is not
+  enabled.
+
+  In DBIx::Log4perl::st::execute speed it up when debug logging is
+  disabled, DBIX_L4P_LOG_DBDSPECIFIC is enabled and we are using
+  DBD::Oracle.
+
 0.09  Fri February 23 2007
 
   Dump to 0.09.

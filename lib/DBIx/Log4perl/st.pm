@@ -55,14 +55,14 @@ sub execute {
     # and put them back after using the second sth (ensuring we temporarily
     # turn off any error handler to avoid set_err calling them again).
     #
-    if (($h->{logmask} & DBIX_L4P_LOG_DBDSPECIFIC) &&
+    if (($h->{logger}->is_debug()) &&
+        ($h->{logmask} & DBIX_L4P_LOG_DBDSPECIFIC) &&
     	($h->{driver} eq 'Oracle') && (!$h->{dbd_specific})) {
 	my ($errstr, $err, $state) = (
 	    $sth->errstr, $sth->err, $sth->state);
     	$h->{dbd_specific} = 1;
     	my $dbh = $sth->FETCH('Database');
-    	my @d = $dbh->func('dbms_output_get');
-    	$sth->_dbix_l4p_debug('dbms', @d) if scalar(@d);
+    	$sth->_dbix_l4p_debug('dbms', $dbh->func('dbms_output_get'));
     	$h->{dbd_specific} = 0;
 	{
 	    local $sth->{HandleError} = undef;

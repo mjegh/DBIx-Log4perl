@@ -44,6 +44,9 @@ sub _dbix_l4p_debug {
     my ($self, $thing, @args) = @_;
 
     my $h = $self->{private_DBIx_Log4perl};
+
+    return unless $h->{logger}->is_debug();
+
     $Data::Dumper::Indent = 0;
 
     if (scalar(@args) > 1) {
