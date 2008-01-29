@@ -1,6 +1,6 @@
 Revision history for Perl extension DBIx::Log4perl.
 
-0.10  Tues March 27 2007
+0.10  Tues January 29 2008
 
   The disconnect code was not checking that our private handle in the
   dbh was valid before using it to log a disconnect message. It was also
@@ -25,6 +25,9 @@ Revision history for Perl extension DBIx::Log4perl.
   In DBIx::Log4perl::st::execute speed it up when debug logging is
   disabled, DBIX_L4P_LOG_DBDSPECIFIC is enabled and we are using
   DBD::Oracle.
+
+  Do not output any log for Oracle dbms_output before checking we
+  got some.
 
 0.09  Fri February 23 2007
 

@@ -62,7 +62,9 @@ sub execute {
 	    $sth->errstr, $sth->err, $sth->state);
     	$h->{dbd_specific} = 1;
     	my $dbh = $sth->FETCH('Database');
-    	$sth->_dbix_l4p_debug('dbms', $dbh->func('dbms_output_get'));
+        
+        my @lines = $dbh->func('dbms_output_get');
+    	$sth->_dbix_l4p_debug('dbms', @lines) if (scalar(@lines) > 0);
     	$h->{dbd_specific} = 0;
 	{
 	    local $sth->{HandleError} = undef;
