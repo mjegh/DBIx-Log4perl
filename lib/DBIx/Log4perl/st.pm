@@ -182,6 +182,11 @@ sub bind_param_array {
 
 sub fetch {			# alias for fetchrow_arrayref
   my($sth, @args) = @_;
+  
+  if (!exists($sth->{private_DBIx_Log4perl})) {
+      my $dbh = $sth->FETCH('Database');
+      $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
+  }
   my $h = $sth->{private_DBIx_Log4perl};
 
   my $res = $sth->SUPER::fetch(@args);
@@ -192,6 +197,11 @@ sub fetch {			# alias for fetchrow_arrayref
 
 sub fetchrow_arrayref {			# alias for fetchrow_arrayref
   my($sth, @args) = @_;
+
+  if (!exists($sth->{private_DBIx_Log4perl})) {
+      my $dbh = $sth->FETCH('Database');
+      $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
+  }
   my $h = $sth->{private_DBIx_Log4perl};
 
   my $res = $sth->SUPER::fetchrow_arrayref(@args);
@@ -203,6 +213,11 @@ sub fetchrow_arrayref {			# alias for fetchrow_arrayref
 
 sub fetchrow_array {
   my ($sth, @args) = @_;
+
+  if (!exists($sth->{private_DBIx_Log4perl})) {
+      my $dbh = $sth->FETCH('Database');
+      $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
+  }
   my $h = $sth->{private_DBIx_Log4perl};
 
   my @row = $sth->SUPER::fetchrow_array(@args);
@@ -214,6 +229,11 @@ sub fetchrow_array {
 
 sub fetchrow_hashref {
   my($sth, @args) = @_;
+
+  if (!exists($sth->{private_DBIx_Log4perl})) {
+      my $dbh = $sth->FETCH('Database');
+      $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
+  }
   my $h = $sth->{private_DBIx_Log4perl};
 
   my $res = $sth->SUPER::fetchrow_hashref(@args);

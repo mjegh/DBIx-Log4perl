@@ -1,5 +1,11 @@
 Revision history for Perl extension DBIx::Log4perl.
 
+0.11  Thur February 21 2008
+
+  DBIx::Log4perl did not support the use of statement handles returned
+  as output bound parameters in DBD::Oracle because it had not seen
+  them created and hence had not injected the log handle into them.
+
 0.10  Tues January 29 2008
 
   The disconnect code was not checking that our private handle in the
