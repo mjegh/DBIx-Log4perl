@@ -329,10 +329,13 @@ sub connect {
     #
     # Enable dbms_output for DBD::Oracle else turn off DBDSPECIFIC as we have
     # no support for DBDSPECIFIC in any other drivers.
+    # BUT only enable it if the log handle is doing debug as we only call
+    # dbms_output_get in that case.
     #
     $h{driver} = $dbh->{Driver}->{Name};
-    if (($h{logmask} & DBIX_L4P_LOG_DBDSPECIFIC) &&
-	    ($h{driver} eq 'Oracle')) {
+    if (($h->{logger}->is_debug()) &&
+            ($h{logmask} & DBIX_L4P_LOG_DBDSPECIFIC) &&
+                ($h{driver} eq 'Oracle')) {
 	$dbh->func('dbms_output_enable');
     } else {
 	$h{logmask} &= ~DBIX_L4P_LOG_DBDSPECIFIC;

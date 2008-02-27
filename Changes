@@ -6,6 +6,12 @@ Revision history for Perl extension DBIx::Log4perl.
   as output bound parameters in DBD::Oracle because it had not seen
   them created and hence had not injected the log handle into them.
 
+  DBIx::Log4perl was changed to only retrieve Oracle dbms_output if
+  the logging handle has debug enabled but unfortunately it was
+  continuing to enable dbms_output regardless of logging mode. As a
+  result, once dbms_output was enabled, the Oracle dbms_output buffer
+  starts filling and once full your procedures die.
+
 0.10  Tues January 29 2008
 
   The disconnect code was not checking that our private handle in the
