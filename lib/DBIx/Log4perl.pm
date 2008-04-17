@@ -31,27 +31,32 @@ our @EXPORT_MASKS = qw(DBIX_L4P_LOG_DEFAULT
 our %EXPORT_TAGS= (masks => \@EXPORT_MASKS);
 Exporter::export_ok_tags('masks'); # all tags must be in EXPORT_OK
 
-
+my $_counter;                   # to hold sub to count
 BEGIN {
-    # when Log4perl logs where the log message was output get it to ignore
-    # the lowest 2 levels of the stack i.e. DBIx::Log4perl.
-    $Log::Log4perl::caller_depth = 2;
+    my $x = sub {
+        my $start = shift;
+        return sub {$start++}};
+    $_counter = &$x(0);         # used to count dbh connections
 }
 
-my $glogger;
+my $_glogger;
 
 sub _dbix_l4p_debug {
-    my ($self, $thing, @args) = @_;
+    my ($self, $level, $thing, @args) = @_;
 
     my $h = $self->{private_DBIx_Log4perl};
 
     return unless $h->{logger}->is_debug();
 
     $Data::Dumper::Indent = 0;
-
+    local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + $level
+        if $level;
+    
     if (scalar(@args) > 1) {
 	$h->{logger}->debug(
 	    sub {Data::Dumper->Dump([\@args], [$thing])})
+    } elsif (ref($thing) eq 'CODE') {
+	$h->{logger}->debug($thing);
     } elsif (ref($args[0])) {
 	$h->{logger}->debug(
 	    sub {Data::Dumper->Dump([$args[0]], [$thing])})
@@ -64,12 +69,34 @@ sub _dbix_l4p_debug {
     } else {
 	$h->{logger}->debug($thing);
     }
+    return;
 }
-sub _dbix_l4p_warning {
-    my ($self, $thing, @args) = @_;
+
+sub _dbix_l4p_info {
+    my ($self, $level, $thing) = @_;
 
     my $h = $self->{private_DBIx_Log4perl};
+
+    return unless $h->{logger}->is_info();
+
+    local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + $level
+        if $level;
+    
+    $h->{logger}->info($thing);
+ 
+    return;
+}
+sub _dbix_l4p_warning {
+    my ($self, $level, $thing, @args) = @_;
+
+    my $h = $self->{private_DBIx_Log4perl};
+
+    return unless $h->{logger}->is_warn();
+
     $Data::Dumper::Indent = 0;
+
+    local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + $level
+        if $level;
 
     if (scalar(@args) > 1) {
 	$h->{logger}->warn(
@@ -80,22 +107,33 @@ sub _dbix_l4p_warning {
     } else {
 	$h->{logger}->warn("$thing: " . DBI::neat($args[0]));
     }
+    return;
 }
+
 sub _dbix_l4p_error {
-    my ($self, $thing, @args) = @_;
+    my ($self, $level, $thing, @args) = @_;
 
     my $h = $self->{private_DBIx_Log4perl};
+
+    return unless $h->{logger}->is_error();
+
     $Data::Dumper::Indent = 0;
+
+    local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + $level
+        if $level;
 
     if (scalar(@args) > 1) {
 	$h->{logger}->error(
 	    sub {Data::Dumper->Dump([\@args], [$thing])})
+    } elsif (ref($thing) eq 'CODE') {
+        $h->{logger}->error($thing);
     } elsif (ref($args[0])) {
 	$h->{logger}->error(
 	    sub {Data::Dumper->Dump([$args[0]], [$thing])})
     } else {
 	$h->{logger}->error("$thing: " . DBI::neat($args[0]));
     }
+    return;
 }
 
 sub _dbix_l4p_attr_map {
@@ -168,12 +206,14 @@ sub _set_err_handler {
 sub _error_handler {
     my ($msg, $handle, $method_ret) = @_;
 
+    local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + 1;
+
     my $dbh = $handle;
     my $lh;
     my $h = $handle->{private_DBIx_Log4perl};
     my $out = '';
 
-    $lh = $glogger;
+    $lh = $_glogger;
     $lh = $h->{logger} if ($h && exists($h->{logger}));
     return 0 if (!$lh);
 
@@ -264,9 +304,19 @@ sub _error_handler {
     }
 }
 
+sub _make_counter {
+    my $start = shift;
+    return sub {$start++}
+};
+
 sub connect {
     my ($drh, $dsn, $user, $pass, $attr) = @_;
     my %h = ();
+    $h{dbh_no} = &$_counter();
+    $h{new_stmt_no} = _make_counter(0); # get a new stmt count for this dbh
+
+    local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + 1;
+
     my $log;
     if ($attr) {
       # check we have not got DBIx_l4p_init without DBIx_l4p_log or vice versa
@@ -310,7 +360,7 @@ sub connect {
 	$attr->{HandleSetErr} = \&_set_err_handler;
     }
     $h{logger} = Log::Log4perl->get_logger() if (!exists($h{logger}));
-    $glogger = $h{logger};
+    $_glogger = $h{logger};
     
     my $dbh = $drh->SUPER::connect($dsn, $user, $pass, $attr);
     return $dbh if (!$dbh);
@@ -318,7 +368,9 @@ sub connect {
     $h{dbd_specific} = 0;
     $dbh->{private_DBIx_Log4perl} = \%h;
     if ($h{logmask} & DBIX_L4P_LOG_CONNECT) {
-	$h{logger}->debug("connect: $dsn, $user");
+	$h{logger}->debug("connect($h{dbh_no}): " .
+                              (defined($dsn) ? $dsn : '') .
+                                  (defined($user) ? $user : ''));
 	no strict 'refs';
 	my $v = "DBD::" . $dbh->{Driver}->{Name} . "::VERSION";
 	$h{logger}->info("DBI: " . $DBI::VERSION,
@@ -333,7 +385,7 @@ sub connect {
     # dbms_output_get in that case.
     #
     $h{driver} = $dbh->{Driver}->{Name};
-    if (($h->{logger}->is_debug()) &&
+    if (($h{logger}->is_debug()) &&
             ($h{logmask} & DBIX_L4P_LOG_DBDSPECIFIC) &&
                 ($h{driver} eq 'Oracle')) {
 	$dbh->func('dbms_output_enable');
@@ -608,8 +660,9 @@ use:
   log4perl.appender.A1.layout.ConversionPattern=%d %p> %F{1}:%L %M - %m%n
 
 to make Log4perl prefix the line with a timestamp, module name and
-filename. DBIx::Log4perl sets $Log::Log4perl::caller_depth=2 in it's
-BEGIN so Log4perl ignores the two lowest levels in the stack.
+filename. DBIx::Log4perl sets $Log::Log4perl::caller_depth in each
+method so when Log4perl outputs the module/file DBIx::Log4perl
+is ignored.
 
 =head1 FORMAT OF LOG
 
@@ -617,7 +670,7 @@ BEGIN so Log4perl ignores the two lowest levels in the stack.
 
 For a connect the log will contain something like:
 
-  DEBUG - connect: DBI:mysql:mjetest, bet
+  DEBUG - connect(0): DBI:mysql:mjetest, bet
   INFO - DBI: 1.50, DBIx::Log4perl: 0.01, Driver: mysql(3.0002_4)
 
 For
@@ -627,8 +680,15 @@ For
 
 you will get:
 
-  DEBUG - prepare: 'insert into mytest values (?,?)'
-  DEBUG - $execute = [1,'one'];
+  DEBUG - prepare(0.1): 'insert into mytest values (?,?)'
+  DEBUG - $execute(0.1) = [1,'one'];
+
+The numbers in the () after a method name indicate which connection or
+statement handle the operation was performed on. The first connection
+your application makes will be connection 0 (see "connect(0)"
+above). Each statement method will show the connection number followed
+by a '.' and the statement number (e.g., "prepare(0.1)" above is the
+second statement handle on the first connection).
 
 NOTE: Some DBI methods are combinations of various methods
 e.g. selectrow_* methods. For some of these methods DBI does not

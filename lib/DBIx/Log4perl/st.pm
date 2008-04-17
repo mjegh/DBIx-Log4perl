@@ -11,8 +11,8 @@ use DBIx::Log4perl::Constants qw (:masks $LogMask);
 sub finish {
     my ($sth) = shift;
     my $h = $sth->{private_DBIx_Log4perl};
-    
-    $sth->_dbix_l4p_debug('finish')
+
+    $sth->_dbix_l4p_debug(2, "finish($h->{dbh_no}.$sth->{private_DBIx_st_no})")
 	if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
     return $sth->SUPER::finish;
 }
@@ -30,7 +30,8 @@ sub execute {
     my ($sth, @args) = @_;
     my $h = $sth->{private_DBIx_Log4perl};
 
-    $sth->_dbix_l4p_debug('execute', @args)
+    $sth->_dbix_l4p_debug(2,
+        "execute($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args)
       if (($h->{logmask} & DBIX_L4P_LOG_INPUT) &&
 	  (caller !~ /^DBD::/) &&
 	  (!$h->{dbd_specific}));
@@ -62,9 +63,9 @@ sub execute {
 	    $sth->errstr, $sth->err, $sth->state);
     	$h->{dbd_specific} = 1;
     	my $dbh = $sth->FETCH('Database');
-        
+
         my @lines = $dbh->func('dbms_output_get');
-    	$sth->_dbix_l4p_debug('dbms', @lines) if (scalar(@lines) > 0);
+    	$sth->_dbix_l4p_debug(2, 'dbms', @lines) if (scalar(@lines) > 0);
     	$h->{dbd_specific} = 0;
 	{
 	    local $sth->{HandleError} = undef;
@@ -74,11 +75,12 @@ sub execute {
     }
 
     if (!$ret) {		# error
-	$h->{logger}->error("\tfailed with " . DBI::neat($sth->errstr))
+	$sth->_dbix_l4p_error(2, "\tfailed with " . DBI::neat($sth->errstr))
 	    if (($h->{logmask} & DBIX_L4P_LOG_ERRCAPTURE) && # logging errors
 		(caller !~ /^DBD::/)); # not called from DBD e.g. execute_array
     } elsif (defined($ret) && (!$h->{dbd_specific})) {
-        $sth->_dbix_l4p_debug('affected', $ret)
+        $sth->_dbix_l4p_debug(
+            2, "affected($h->{dbh_no}.$sth->{private_DBIx_st_no})", $ret)
 	    if ((!defined($sth->{NUM_OF_FIELDS})) && # not a result-set
 		($h->{logmask} & DBIX_L4P_LOG_INPUT)	&& # logging input
 		(caller !~ /^DBD::/));
@@ -90,8 +92,9 @@ sub execute_array {
     my ($sth, @args) = @_;
     my $h = $sth->{private_DBIx_Log4perl};
 
-    $sth->_dbix_l4p_debug('execute_array', @args)
-      if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+    $sth->_dbix_l4p_debug(2,
+        "execute_array($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args)
+        if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
 
     if (($#args >= 0) && ($args[0]) &&
 	    (ref($args[0]) eq 'HASH') &&
@@ -121,7 +124,7 @@ sub execute_array {
 	    return ($executed, $affected);
 	}
         my $pa = $sth->{ParamArrays};
-	$h->{logger}->error("execute_array error:");
+	$sth->_dbix_l4p_error(2, "execute_array error:");
 	for my $n (0..@{$array_tuple_status}-1) {
 	    next if (!ref($array_tuple_status->[$n]));
 	    $sth->_dbix_l4p_error('Error', $array_tuple_status->[$n]);
@@ -133,8 +136,8 @@ sub execute_array {
 		    push @plist, $pa->{$p};
 		}
 	    }
-	    $h->{logger}->error(sub {"\t for " .
-				     join(',', map(DBI::neat($_), @plist))});
+            $sth->_dbix_l4p_error(
+                2, sub {"\t for " . join(',', map(DBI::neat($_), @plist))});
 	}
     } elsif ($executed) {
 	if ((defined($sth->{NUM_OF_FIELDS})) || # result-set
@@ -142,10 +145,10 @@ sub execute_array {
 	    return $executed unless wantarray;
 	    return ($executed, $affected);
 	}
-	$sth->_dbix_l4p_debug("executed $executed, affected " .
+	$sth->_dbix_l4p_debug(2, "executed $executed, affected " .
 				  DBI::neat($affected));
     }
-    $h->{logger}->info(sub {Data::Dumper->Dump(
+    $sth->_dbix_l4p_info(2, sub {Data::Dumper->Dump(
 	[$array_tuple_status], ['ArrayTupleStatus'])})
 	if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
     return $executed unless wantarray;
@@ -153,94 +156,103 @@ sub execute_array {
 }
 
 sub bind_param {
-  my($sth, @args) = @_;
-  my $h = $sth->{private_DBIx_Log4perl};
+    my($sth, @args) = @_;
+    my $h = $sth->{private_DBIx_Log4perl};
 
-  $sth->_dbix_l4p_debug('bind_param', @args)
-    if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
-  return $sth->SUPER::bind_param(@args);
+    $sth->_dbix_l4p_debug(2, "bind_param($sth->{private_DBIx_st_no}", @args)
+        if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+    return $sth->SUPER::bind_param(@args);
 }
 
 sub bind_param_inout {
-  my($sth, @args) = @_;
-  my $h = $sth->{private_DBIx_Log4perl};
+    my($sth, @args) = @_;
+    my $h = $sth->{private_DBIx_Log4perl};
 
-  $sth->_dbix_l4p_debug('bind_param_inout', @args)
-    if (($h->{logmask} & DBIX_L4P_LOG_INPUT) &&
-	(caller !~ /^DBD::/));
-  return $sth->SUPER::bind_param_inout(@args);
+    $sth->_dbix_l4p_debug(2,
+        "bind_param_inout($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args)
+        if (($h->{logmask} & DBIX_L4P_LOG_INPUT) && (caller !~ /^DBD::/));
+    return $sth->SUPER::bind_param_inout(@args);
 }
 
 sub bind_param_array {
-  my($sth, @args) = @_;
-  my $h = $sth->{private_DBIx_Log4perl};
+    my($sth, @args) = @_;
+    my $h = $sth->{private_DBIx_Log4perl};
 
-  $sth->_dbix_l4p_debug('bind_param_array', @args)
-    if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
-  return $sth->SUPER::bind_param_array(@args);
+    $sth->_dbix_l4p_debug(2,
+        "bind_param_array($h->{dbh_no}.$sth->{private_DBIx_st_no})",
+        @args) if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+    return $sth->SUPER::bind_param_array(@args);
 }
 
 sub fetch {			# alias for fetchrow_arrayref
-  my($sth, @args) = @_;
-  
-  if (!exists($sth->{private_DBIx_Log4perl})) {
-      my $dbh = $sth->FETCH('Database');
-      $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
-  }
-  my $h = $sth->{private_DBIx_Log4perl};
+    my($sth, @args) = @_;
 
-  my $res = $sth->SUPER::fetch(@args);
-  $h->{logger}->debug(sub {Data::Dumper->Dump([$res], ['fetch'])})
-    if ($h->{logmask} & DBIX_L4P_LOG_OUTPUT);
-  return $res;
+    if (!exists($sth->{private_DBIx_Log4perl})) {
+        my $dbh = $sth->FETCH('Database');
+        $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
+    }
+    my $h = $sth->{private_DBIx_Log4perl};
+
+    my $res = $sth->SUPER::fetch(@args);
+    $sth->_dbix_l4p_debug(2,
+        sub {Data::Dumper->Dump(
+            [$res], ["fetch($h->{dbh_no}.$sth->{private_DBIx_st_no})"])})
+        if ($h->{logmask} & DBIX_L4P_LOG_OUTPUT);
+    return $res;
 }
 
 sub fetchrow_arrayref {			# alias for fetchrow_arrayref
-  my($sth, @args) = @_;
+    my($sth, @args) = @_;
 
-  if (!exists($sth->{private_DBIx_Log4perl})) {
-      my $dbh = $sth->FETCH('Database');
-      $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
-  }
-  my $h = $sth->{private_DBIx_Log4perl};
+    if (!exists($sth->{private_DBIx_Log4perl})) {
+        my $dbh = $sth->FETCH('Database');
+        $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
+    }
+    my $h = $sth->{private_DBIx_Log4perl};
 
-  my $res = $sth->SUPER::fetchrow_arrayref(@args);
-  $h->{logger}->debug(sub {Data::Dumper->Dump([$res],
-						   ['fetchrow_arrayref'])})
-    if ($h->{logmask} & DBIX_L4P_LOG_OUTPUT);
-  return $res;
+    my $res = $sth->SUPER::fetchrow_arrayref(@args);
+    $sth->_dbix_l4p_debug(2,
+        sub {Data::Dumper->Dump(
+            [$res],
+            ["fetchrow_arrayref($h->{dbh_no}.$sth->{private_DBIx_st_no})"])})
+        if ($h->{logmask} & DBIX_L4P_LOG_OUTPUT);
+    return $res;
 }
 
 sub fetchrow_array {
-  my ($sth, @args) = @_;
+    my ($sth, @args) = @_;
 
-  if (!exists($sth->{private_DBIx_Log4perl})) {
-      my $dbh = $sth->FETCH('Database');
-      $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
-  }
-  my $h = $sth->{private_DBIx_Log4perl};
+    if (!exists($sth->{private_DBIx_Log4perl})) {
+        my $dbh = $sth->FETCH('Database');
+        $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
+    }
+    my $h = $sth->{private_DBIx_Log4perl};
 
-  my @row = $sth->SUPER::fetchrow_array(@args);
-  $h->{logger}->debug(sub {
-			     Data::Dumper->Dump([\@row], ['fetchrow_array'])})
-    if ($h->{logmask} & DBIX_L4P_LOG_OUTPUT);
-  return @row;
+    my @row = $sth->SUPER::fetchrow_array(@args);
+    $sth->_dbix_l4p_debug(2,
+        sub {Data::Dumper->Dump(
+            [\@row],
+            ["fetchrow_array($h->{dbh_no}.$sth->{private_DBIx_st_no})"])})
+        if ($h->{logmask} & DBIX_L4P_LOG_OUTPUT);
+    return @row;
 }
 
 sub fetchrow_hashref {
-  my($sth, @args) = @_;
+    my($sth, @args) = @_;
 
-  if (!exists($sth->{private_DBIx_Log4perl})) {
-      my $dbh = $sth->FETCH('Database');
-      $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
-  }
-  my $h = $sth->{private_DBIx_Log4perl};
+    if (!exists($sth->{private_DBIx_Log4perl})) {
+        my $dbh = $sth->FETCH('Database');
+        $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
+    }
+    my $h = $sth->{private_DBIx_Log4perl};
 
-  my $res = $sth->SUPER::fetchrow_hashref(@args);
-  $h->{logger}->debug(
-      sub {Data::Dumper->Dump([$res], ['fetchrow_hashref'])})
-    if ($h->{logmask} & DBIX_L4P_LOG_OUTPUT);
-  return $res;
+    my $res = $sth->SUPER::fetchrow_hashref(@args);
+    $sth->_dbix_l4p_perl(2,
+        sub {Data::Dumper->Dump(
+            [$res],
+            ["fetchrow_hashref($h->{dbh_no}.$sth->{private_DBIx_st_no})"])})
+        if ($h->{logmask} & DBIX_L4P_LOG_OUTPUT);
+    return $res;
 }
 
 1;

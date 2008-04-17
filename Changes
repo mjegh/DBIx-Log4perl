@@ -1,6 +1,6 @@
 Revision history for Perl extension DBIx::Log4perl.
 
-0.11  Thur February 21 2008
+0.11  Thur April 17 2008
 
   DBIx::Log4perl did not support the use of statement handles returned
   as output bound parameters in DBD::Oracle because it had not seen
@@ -11,6 +11,36 @@ Revision history for Perl extension DBIx::Log4perl.
   continuing to enable dbms_output regardless of logging mode. As a
   result, once dbms_output was enabled, the Oracle dbms_output buffer
   starts filling and once full your procedures die.
+
+  DBIx::Log4perl no longer sets $Log::Log4perl::caller_depth to 2 in the
+  BEGIN because the depth depends on the method you are in. Instead
+  Log::Log4perl::caller_depth is set in each method.
+
+  Database methods and statement methods are now logged with one or more
+  numbers (in brackets) indicating which connection or statement handle
+  is being used. e.g.,
+
+  DEBUG - connect(0): DBI:CSV:
+  DEBUG - connect(1): DBI:CSV:
+  DEBUG - connect(2): DBI:CSV:
+  DEBUG - do(0): 'drop table fred'
+  DEBUG - prepare(0.3): 'insert into fred (id, name) values(?,?)'
+  DEBUG - $execute_array(0.3) = [undef,1,'one'];
+  DEBUG - $bind_param_array(0.3) = [1,1];
+  DEBUG - $bind_param_array(0.3) = [2,'one'];
+  DEBUG - finish(0.3)
+
+  which shows 3 connections numbered 0, 1 and 2 and the prepare etc
+  methods are all called in connection 0 using statement 3 i.e.,
+  where there is one number it is a connection and where there are
+  two e.g., (0.3), the first is the connection and the second the
+  statement.
+
+  A modest speed up when using DBIx::Log4perl and some categories of
+  logging are disabled.
+
+  Connect method could use uninitialised dsn/user if they are not set
+  in the connect call e.g. DBI:CSV:
 
 0.10  Tues January 29 2008
 
