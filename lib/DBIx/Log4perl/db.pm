@@ -87,8 +87,17 @@ sub selectrow_array {
     my ($dbh, @args) = @_;
 
     my $h = $dbh->{private_DBIx_Log4perl};
-    $dbh->_dbix_l4p_debug(2, "selectrow_array($h->{dbh_no})", @args)
-      if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+
+    if ($h->{logmask} & DBIX_L4P_LOG_INPUT) {
+        if ((scalar(@args) > 0) && (ref $args[0])) {
+            $dbh->_dbix_l4p_debug(
+                2,
+                "selectrow_array($h->{dbh_no}." .
+                    $args[0]->{private_DBIx_st_no} . ")", @args);
+        } else {
+            $dbh->_dbix_l4p_debug(2, "selectrow_array($h->{dbh_no})", @args);
+        }
+    }
 
     if (wantarray) {
 	my @ret = $dbh->SUPER::selectrow_array(@args);
@@ -108,8 +117,18 @@ sub selectrow_arrayref {
     my ($dbh, @args) = @_;
 
     my $h = $dbh->{private_DBIx_Log4perl};
-    $dbh->_dbix_l4p_debug(2, "selectrow_arrayref($h->{dbh_no})", @args)
-      if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+
+    if ($h->{logmask} & DBIX_L4P_LOG_INPUT) {
+        if ((scalar(@args) > 0) && (ref $args[0])) {
+            $dbh->_dbix_l4p_debug(
+                2,
+                "selectrow_arrayref($h->{dbh_no}." .
+                    $args[0]->{private_DBIx_st_no} . ")", @args);
+        } else {
+            $dbh->_dbix_l4p_debug(
+                2, "selectrow_arrayref($h->{dbh_no})", @args);
+        }
+    }
 
     my $ref = $dbh->SUPER::selectrow_arrayref(@args);
     $dbh->_dbix_l4p_debug(2, 'result', $ref)
@@ -122,8 +141,16 @@ sub selectrow_hashref {
 
     my $h = $dbh->{private_DBIx_Log4perl};
 
-    $dbh->_dbix_l4p_debug(2, "selectrow_hashref($h->{dbh_no})", @args)
-        if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+    if ($h->{logmask} & DBIX_L4P_LOG_INPUT) {
+        if ((scalar(@args) > 0) && (ref $args[0])){
+            $dbh->_dbix_l4p_debug(
+                2,
+                "selectrow_hashref($h->{dbh_no}." .
+                    $args[0]->{private_DBIx_st_no} . ")", @args)
+        } else {
+            $dbh->_dbix_l4p_debug(2, "selectrow_hashref($h->{dbh_no})", @args);
+        }
+    }
 
     my $ref = $dbh->SUPER::selectrow_hashref(@args);
     # no need to show result - fetch will do this
@@ -135,8 +162,17 @@ sub selectall_arrayref {
     my ($dbh, @args) = @_;
 
     my $h = $dbh->{private_DBIx_Log4perl};
-    $dbh->_dbix_l4p_debug(2, "selectall_arrayref($h->{dbh_no})", @args)
-      if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+    if ($h->{logmask} & DBIX_L4P_LOG_INPUT) {
+        if ((scalar(@args) > 0) && (ref $args[0])) {
+            $dbh->_dbix_l4p_debug(
+                2,
+                "selectall_arrayref($h->{dbh_no}." .
+                    $args[0]->{private_DBIx_st_no} . ")", @args);
+        } else {
+            $dbh->_dbix_l4p_debug(
+                2, "selectall_arrayref($h->{dbh_no})", @args);
+        }
+    }
 
     my $ref = $dbh->SUPER::selectall_arrayref(@args);
     $dbh->_dbix_l4p_debug(2, 'result', $ref)
@@ -148,8 +184,16 @@ sub selectall_hashref {
     my ($dbh, @args) = @_;
 
     my $h = $dbh->{private_DBIx_Log4perl};
-    $dbh->_dbix_l4p_debug(2, "selectall_hashref($h->{dbh_no})", @args)
-        if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+    if ($h->{logmask} & DBIX_L4P_LOG_INPUT) {
+        if ((scalar(@args) > 0) && (ref $args[0])) {
+            $dbh->_dbix_l4p_debug(
+                2,
+                "selectall_hashref($h->{dbh_no}." .
+                    $args[0]->{private_DBIx_st_no} . ")", @args);
+        } else {
+            $dbh->_dbix_l4p_debug(2, "selectall_hashref($h->{dbh_no})", @args);
+        }
+    }
 
     my $ref = $dbh->SUPER::selectall_hashref(@args);
     # no need to show result - fetch will do this

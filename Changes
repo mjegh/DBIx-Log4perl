@@ -1,5 +1,11 @@
 Revision history for Perl extension DBIx::Log4perl.
 
+0.12  XXX YYY ZZ 2008
+
+  Code added to 0.11 to show statement number does not handle the
+  selectrow_xxx and selectall_xxx methods when called with an already
+  prepared statement handle. It does now.
+
 0.11  Thur April 17 2008
 
   DBIx::Log4perl did not support the use of statement handles returned
