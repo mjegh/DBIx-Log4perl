@@ -2,6 +2,7 @@ Changes
 Makefile.PL
 MANIFEST
 README
+todo.txt
 example.conf
 t/DBIx-Log4perl.t
 t/simple.t
