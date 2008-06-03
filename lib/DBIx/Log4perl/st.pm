@@ -159,7 +159,7 @@ sub bind_param {
     my($sth, @args) = @_;
     my $h = $sth->{private_DBIx_Log4perl};
 
-    $sth->_dbix_l4p_debug(2, "bind_param($sth->{private_DBIx_st_no}", @args)
+    $sth->_dbix_l4p_debug(2, "bind_param($sth->{private_DBIx_st_no})", @args)
         if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
     return $sth->SUPER::bind_param(@args);
 }
