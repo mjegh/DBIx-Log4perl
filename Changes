@@ -6,6 +6,9 @@ Revision history for Perl extension DBIx::Log4perl.
   selectrow_xxx and selectall_xxx methods when called with an already
   prepared statement handle. It does now.
 
+  DBIx::Log4perl::st::bind_param was log output was missing a closing
+  bracket.
+
 0.11  Thur April 17 2008
 
   DBIx::Log4perl did not support the use of statement handles returned
