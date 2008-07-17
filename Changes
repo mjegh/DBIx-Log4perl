@@ -1,6 +1,6 @@
 Revision history for Perl extension DBIx::Log4perl.
 
-0.12  XXX YYY ZZ 2008
+0.12  Thur July 17 2008
 
   Code added to 0.11 to show statement number does not handle the
   selectrow_xxx and selectall_xxx methods when called with an already
@@ -8,6 +8,17 @@ Revision history for Perl extension DBIx::Log4perl.
 
   DBIx::Log4perl::st::bind_param log output was missing a closing
   bracket and also missing the connection number.
+
+  The DBIx::Log4perl error handler did not cope with the fact that
+  some statements (those magicked into existence by DBD::Oracle using
+  ORA_RSET i.e., a cursor returned from a function or procedure) do
+  not have any recorded SQL. This led to use of unitialised value in
+  DBIx::Log4perl::_error_handler.
+
+  Fix finish method bug when used on a statement handle returned as
+  an output bound parameter in DBD::Oracle. The log handle was not
+  always set (see notes on similar fix in 0.11) which can lead to
+  unitialised value errors.
 
 0.11  Thur April 17 2008
 

@@ -10,6 +10,9 @@ use DBIx::Log4perl::Constants qw (:masks $LogMask);
 
 sub finish {
     my ($sth) = shift;
+
+    _unseen_sth($sth) if (!exists($sth->{private_DBIx_Log4perl}));
+
     my $h = $sth->{private_DBIx_Log4perl};
 
     $sth->_dbix_l4p_debug(2, "finish($h->{dbh_no}.$sth->{private_DBIx_st_no})")
@@ -189,10 +192,8 @@ sub bind_param_array {
 sub fetch {			# alias for fetchrow_arrayref
     my($sth, @args) = @_;
 
-    if (!exists($sth->{private_DBIx_Log4perl})) {
-        my $dbh = $sth->FETCH('Database');
-        $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
-    }
+    _unseen_sth($sth) if (!exists($sth->{private_DBIx_Log4perl}));
+
     my $h = $sth->{private_DBIx_Log4perl};
 
     my $res = $sth->SUPER::fetch(@args);
@@ -206,10 +207,8 @@ sub fetch {			# alias for fetchrow_arrayref
 sub fetchrow_arrayref {			# alias for fetchrow_arrayref
     my($sth, @args) = @_;
 
-    if (!exists($sth->{private_DBIx_Log4perl})) {
-        my $dbh = $sth->FETCH('Database');
-        $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
-    }
+    _unseen_sth($sth) if (!exists($sth->{private_DBIx_Log4perl}));
+
     my $h = $sth->{private_DBIx_Log4perl};
 
     my $res = $sth->SUPER::fetchrow_arrayref(@args);
@@ -224,10 +223,8 @@ sub fetchrow_arrayref {			# alias for fetchrow_arrayref
 sub fetchrow_array {
     my ($sth, @args) = @_;
 
-    if (!exists($sth->{private_DBIx_Log4perl})) {
-        my $dbh = $sth->FETCH('Database');
-        $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
-    }
+    _unseen_sth($sth) if (!exists($sth->{private_DBIx_Log4perl}));
+
     my $h = $sth->{private_DBIx_Log4perl};
 
     my @row = $sth->SUPER::fetchrow_array(@args);
@@ -242,10 +239,8 @@ sub fetchrow_array {
 sub fetchrow_hashref {
     my($sth, @args) = @_;
 
-    if (!exists($sth->{private_DBIx_Log4perl})) {
-        my $dbh = $sth->FETCH('Database');
-        $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
-    }
+    _unseen_sth($sth) if (!exists($sth->{private_DBIx_Log4perl}));
+
     my $h = $sth->{private_DBIx_Log4perl};
 
     my $res = $sth->SUPER::fetchrow_hashref(@args);
@@ -255,6 +250,22 @@ sub fetchrow_hashref {
             ["fetchrow_hashref($h->{dbh_no}.$sth->{private_DBIx_st_no})"])})
         if ($h->{logmask} & DBIX_L4P_LOG_OUTPUT);
     return $res;
+}
+
+#
+# _unseen_sth is called if we come across a statement handle which was not
+# created via the prepare method e.g., a statement handle DBD::Oracle
+# magicked into existence when a function or procedure returns a cursor.
+# We need to save the private log handle and set the statement number.
+# 
+sub _unseen_sth
+{
+    my $sth = shift;
+
+    my $dbh = $sth->FETCH('Database');
+    $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
+    $sth->{private_DBIx_st_no} =
+        $dbh->{private_DBIx_Log4perl}->{new_stmt_no}();
 }
 
 1;

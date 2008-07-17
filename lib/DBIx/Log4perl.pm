@@ -247,7 +247,7 @@ sub _error_handler {
     my $dbname = exists($dbh->{Name}) ? $dbh->{Name} : "";
     my $username = exists($dbh->{Username}) ? $dbh->{Username} : "";
     $out .= "  DB: $dbname, Username: $username\n";
-    $out .= "  handle type: $type\n  SQL: $sql\n";
+    $out .= "  handle type: $type\n  SQL: " . DBI::neat($sql) . "\n";
     $out .= '  db Kids=' . $dbh->{Kids} .
 	', ActiveKids=' . $dbh->{ActiveKids} . "\n";
     $out .= "  DB errstr: " . $handle->errstr . "\n"
