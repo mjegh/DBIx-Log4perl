@@ -15,7 +15,8 @@ sub finish {
 
     my $h = $sth->{private_DBIx_Log4perl};
 
-    $sth->_dbix_l4p_debug(2, "finish($h->{dbh_no}.$sth->{private_DBIx_st_no})")
+    $sth->_dbix_l4p_debug($h, 2,
+                          "finish($h->{dbh_no}.$sth->{private_DBIx_st_no})")
 	if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
     return $sth->SUPER::finish;
 }
@@ -33,10 +34,10 @@ sub execute {
     my ($sth, @args) = @_;
     my $h = $sth->{private_DBIx_Log4perl};
 
-    $sth->_dbix_l4p_debug(2,
+    $sth->_dbix_l4p_debug($h, 2,
         "execute($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args)
       if (($h->{logmask} & DBIX_L4P_LOG_INPUT) &&
-	  (caller !~ /^DBD::/) &&
+	  (caller !~ /^DBD::/o) &&
 	  (!$h->{dbd_specific}));
 
     my $ret = $sth->SUPER::execute(@args);
@@ -68,7 +69,7 @@ sub execute {
     	my $dbh = $sth->FETCH('Database');
 
         my @lines = $dbh->func('dbms_output_get');
-    	$sth->_dbix_l4p_debug(2, 'dbms', @lines) if (scalar(@lines) > 0);
+    	$sth->_dbix_l4p_debug($h, 2, 'dbms', @lines) if (scalar(@lines) > 0);
     	$h->{dbd_specific} = 0;
 	{
 	    local $sth->{HandleError} = undef;
@@ -80,13 +81,13 @@ sub execute {
     if (!$ret) {		# error
 	$sth->_dbix_l4p_error(2, "\tfailed with " . DBI::neat($sth->errstr))
 	    if (($h->{logmask} & DBIX_L4P_LOG_ERRCAPTURE) && # logging errors
-		(caller !~ /^DBD::/)); # not called from DBD e.g. execute_array
+		(caller !~ /^DBD::/o)); # not called from DBD e.g. execute_array
     } elsif (defined($ret) && (!$h->{dbd_specific})) {
         $sth->_dbix_l4p_debug(
-            2, "affected($h->{dbh_no}.$sth->{private_DBIx_st_no})", $ret)
+            $h, 2, "affected($h->{dbh_no}.$sth->{private_DBIx_st_no})", $ret)
 	    if ((!defined($sth->{NUM_OF_FIELDS})) && # not a result-set
 		($h->{logmask} & DBIX_L4P_LOG_INPUT)	&& # logging input
-		(caller !~ /^DBD::/));
+		(caller !~ /^DBD::/o));
     }
     return $ret;
 }
@@ -95,7 +96,7 @@ sub execute_array {
     my ($sth, @args) = @_;
     my $h = $sth->{private_DBIx_Log4perl};
 
-    $sth->_dbix_l4p_debug(2,
+    $sth->_dbix_l4p_debug($h, 2,
         "execute_array($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args)
         if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
 
@@ -148,7 +149,7 @@ sub execute_array {
 	    return $executed unless wantarray;
 	    return ($executed, $affected);
 	}
-	$sth->_dbix_l4p_debug(2, "executed $executed, affected " .
+	$sth->_dbix_l4p_debug($h, 2, "executed $executed, affected " .
 				  DBI::neat($affected));
     }
     $sth->_dbix_l4p_info(2, sub {Data::Dumper->Dump(
@@ -163,7 +164,7 @@ sub bind_param {
     my $h = $sth->{private_DBIx_Log4perl};
 
     $sth->_dbix_l4p_debug(
-        2, "bind_param($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args)
+        $h, 2, "bind_param($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args)
         if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
 
     return $sth->SUPER::bind_param(@args);
@@ -173,9 +174,9 @@ sub bind_param_inout {
     my($sth, @args) = @_;
     my $h = $sth->{private_DBIx_Log4perl};
 
-    $sth->_dbix_l4p_debug(2,
+    $sth->_dbix_l4p_debug($h, 2,
         "bind_param_inout($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args)
-        if (($h->{logmask} & DBIX_L4P_LOG_INPUT) && (caller !~ /^DBD::/));
+        if (($h->{logmask} & DBIX_L4P_LOG_INPUT) && (caller !~ /^DBD::/o));
     return $sth->SUPER::bind_param_inout(@args);
 }
 
@@ -183,7 +184,7 @@ sub bind_param_array {
     my($sth, @args) = @_;
     my $h = $sth->{private_DBIx_Log4perl};
 
-    $sth->_dbix_l4p_debug(2,
+    $sth->_dbix_l4p_debug($h, 2,
         "bind_param_array($h->{dbh_no}.$sth->{private_DBIx_st_no})",
         @args) if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
     return $sth->SUPER::bind_param_array(@args);
@@ -197,7 +198,7 @@ sub fetch {			# alias for fetchrow_arrayref
     my $h = $sth->{private_DBIx_Log4perl};
 
     my $res = $sth->SUPER::fetch(@args);
-    $sth->_dbix_l4p_debug(2,
+    $sth->_dbix_l4p_debug($h, 2,
         sub {Data::Dumper->Dump(
             [$res], ["fetch($h->{dbh_no}.$sth->{private_DBIx_st_no})"])})
         if ($h->{logmask} & DBIX_L4P_LOG_OUTPUT);
@@ -212,7 +213,7 @@ sub fetchrow_arrayref {			# alias for fetchrow_arrayref
     my $h = $sth->{private_DBIx_Log4perl};
 
     my $res = $sth->SUPER::fetchrow_arrayref(@args);
-    $sth->_dbix_l4p_debug(2,
+    $sth->_dbix_l4p_debug($h, 2,
         sub {Data::Dumper->Dump(
             [$res],
             ["fetchrow_arrayref($h->{dbh_no}.$sth->{private_DBIx_st_no})"])})
@@ -228,7 +229,7 @@ sub fetchrow_array {
     my $h = $sth->{private_DBIx_Log4perl};
 
     my @row = $sth->SUPER::fetchrow_array(@args);
-    $sth->_dbix_l4p_debug(2,
+    $sth->_dbix_l4p_debug($h, 2,
         sub {Data::Dumper->Dump(
             [\@row],
             ["fetchrow_array($h->{dbh_no}.$sth->{private_DBIx_st_no})"])})
