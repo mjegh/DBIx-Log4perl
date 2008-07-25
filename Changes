@@ -1,5 +1,14 @@
 Revision history for Perl extension DBIx::Log4perl.
 
+0.13  XXXX YYYY ZZ PPPP
+
+  Fixed bug in last_insert_id which was missing the level argument
+  leading to various errors when logging last_insert_id.
+
+  After looking at DBIx::Log4perl usage from an application I use
+  through Devel::NYTProf I have reduced the time spent in
+  DBIx::Log4perl a little.
+
 0.12  Thur July 17 2008
 
   Code added to 0.11 to show statement number does not handle the

@@ -12,7 +12,7 @@ use DBIx::Log4perl::Constants qw (:masks $LogMask);
 use DBIx::Log4perl::db;
 use DBIx::Log4perl::st;
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 require Exporter;
 our @ISA = qw(Exporter DBI);		# look in DBI for anything we don't do
 
@@ -42,9 +42,9 @@ BEGIN {
 my $_glogger;
 
 sub _dbix_l4p_debug {
-    my ($self, $level, $thing, @args) = @_;
+    my ($self, $h, $level, $thing, @args) = @_;
 
-    my $h = $self->{private_DBIx_Log4perl};
+    $h = $self->{private_DBIx_Log4perl} if !defined($h);
 
     return unless $h->{logger}->is_debug();
 
