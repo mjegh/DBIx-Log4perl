@@ -9,6 +9,8 @@ Revision history for Perl extension DBIx::Log4perl.
   through Devel::NYTProf I have reduced the time spent in
   DBIx::Log4perl a little.
 
+  Fixed a few typos in the pod - thanks to Will Sheppard.
+
 0.12  Thur July 17 2008
 
   Code added to 0.11 to show statement number does not handle the

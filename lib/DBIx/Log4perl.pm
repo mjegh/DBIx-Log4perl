@@ -424,7 +424,7 @@ parameters, result-sets, transactions etc to a Log::Log4perl handle.
   or
 
   use DBIx::Log4perl;
-  my $dbh = DBIX::Log4perl->connect('DBI:odbc:mydsn', $user, $pass
+  my $dbh = DBIx::Log4perl->connect('DBI:odbc:mydsn', $user, $pass,
                                     {DBIx_l4p_init => "/etc/mylog.conf",
                                      DBIx_l4p_class => "My::Package");
   $dbh->DBI_METHOD(args);
@@ -802,7 +802,7 @@ o a trace of where the problem occurred In this case the final problem
 
 =head2 Use of Data::Dumper
 
-DBIX::log4perl makes extensive use of Data::Dumper to output arguments
+DBIx::log4perl makes extensive use of Data::Dumper to output arguments
 passed to DBI methods. In some cases it combines the method called
 with the data it is logging e.g.
 
