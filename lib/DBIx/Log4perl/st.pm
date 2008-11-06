@@ -34,11 +34,21 @@ sub execute {
     my ($sth, @args) = @_;
     my $h = $sth->{private_DBIx_Log4perl};
 
-    $sth->_dbix_l4p_debug($h, 2,
-        "execute($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args)
-      if (($h->{logmask} & DBIX_L4P_LOG_INPUT) &&
-	  (caller !~ /^DBD::/o) &&
-	  (!$h->{dbd_specific}));
+    if (($h->{logmask} & DBIX_L4P_LOG_INPUT) &&
+	(caller !~ /^DBD::/o) &&
+	(!$h->{dbd_specific})) {
+	if (scalar(@args)) {
+	    $sth->_dbix_l4p_debug(
+                $h, 2,
+                "execute($h->{dbh_no}.$sth->{private_DBIx_st_no}) (" .
+                    ($sth->{Statement} ? $sth->{Statement} : '') . ')',
+                @args);
+	} else {
+	    $sth->_dbix_l4p_debug(
+                $h, 2,
+                "execute($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args);
+	}
+    }
 
     my $ret = $sth->SUPER::execute(@args);
 
