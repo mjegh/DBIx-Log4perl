@@ -53,7 +53,7 @@ sub _dbix_l4p_debug {
 
     local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + $level
         if $level;
-    
+
     if (scalar(@args) > 1) {
 	$h->{logger}->debug(
 	    sub {Data::Dumper->Dump([\@args], [$thing])})
@@ -83,9 +83,9 @@ sub _dbix_l4p_info {
 
     local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + $level
         if $level;
-    
+
     $h->{logger}->info($thing);
- 
+
     return;
 }
 sub _dbix_l4p_warning {
@@ -365,7 +365,7 @@ sub connect {
     }
     $h{logger} = Log::Log4perl->get_logger() if (!exists($h{logger}));
     $_glogger = $h{logger};
-    
+
     my $dbh = $drh->SUPER::connect($dsn, $user, $pass, $attr);
     return $dbh if (!$dbh);
 
@@ -454,14 +454,14 @@ DBIx::Log4perl adds the following methods over DBI.
 
   $h->dbxi_l4p_getattr('DBIx_l4p_logmask');
 
-Returns the value for a DBIx::Log4perl attribute (see L</Attributes>).
+Returns the value for a DBIx::Log4perl attribute (see L</ATTRIBUTES>).
 
 =head2 dbix_l4p_setattr
 
  $h->dbix_l4p_setattr('DBIx_l4p_logmask', 1);
 
 Set the value of the specified DBIx::Log4perl attribute
-(see L</Attributes>).
+(see L</ATTRIBUTES>).
 
 =head2 dbix_l4p_logdie
 
@@ -648,15 +648,15 @@ and appenders. DBIx::Log4perl contains a sample configuration file you
 may use to get started. It looks like this:
 
   log4perl.logger = FATAL, LOGFILE
-      
+
   log4perl.appender.LOGFILE=Log::Log4perl::Appender::File
   log4perl.appender.LOGFILE.filename=/tmp/log
   log4perl.appender.LOGFILE.mode=append
   log4perl.appender.LOGFILE.Threshold = ERROR
-      
+
   log4perl.appender.LOGFILE.layout=PatternLayout
   log4perl.appender.LOGFILE.layout.ConversionPattern=[%r] %F %L %c - %m%n
-  
+
   log4perl.logger.DBIx.Log4perl=DEBUG, A1
   log4perl.appender.A1=Log::Log4perl::Appender::File
   log4perl.appender.A1.filename=/tmp/xlog
@@ -667,7 +667,7 @@ This is perhaps the most simple configuration. It says fatal errors go
 to /tmp/log and debug and above go to /tmp/xlog. It also uses the
 SimpleLayout which prefixes each line with the log level. You can
 use:
- 
+
   log4perl.appender.A1.layout=Log::Log4perl::Layout::PatternLayout
   log4perl.appender.A1.layout.ConversionPattern=%d %p> %F{1}:%L %M - %m%n
 
@@ -893,6 +893,75 @@ I had to add the following to dbdimp.c to make it work:
     break;
 
 I believe this code is now added in DBD::mysql 3.0003_1.
+
+=head1 Contributing
+
+There are six main ways you may help with the development and
+maintenance of this module:
+
+=over
+
+=item Submitting patches
+
+Please get the latest version from CPAN and submit any patches against
+that.
+
+=item Reporting installs
+
+Install CPAN::Reporter and report you installations. This is easy to
+do - see L</CPAN Testers Reporting>.
+
+=item Report bugs
+
+If you find what you believe is a bug then enter it into the
+L<http://rt.cpan.org/Dist/Display.html?Name=DBIx::Log4perl>
+system. Where possible include code which reproduces the problem
+including any schema required and the versions of software you are
+using.
+
+If you are unsure whether you have found a bug report it anyway.
+
+=item pod comments and corrections
+
+If you find inaccuracies in the DBIx::Log4perl pod or have a comment
+which you think should be added then go to L<http://annocpan.org> and
+submit them there. I get an email for every comment added and will
+review each one and apply any changes to the documentation.
+
+=item Review DBIx::Log4perl
+
+Add your review of DBIx::Log4perl on L<http://cpanratings.perl.org>.
+
+=item submit test cases
+
+The test suite for DBIx::Log4perl is pitifully small. Any test cases
+would be gratefully received.
+
+=back
+
+=head1 CPAN Testers Reporting
+
+Please, please, please (is that enough), consider installing
+CPAN::Reporter so that when you install perl modules a report of the
+installation success or failure can be sent to cpan testers. In this
+way module authors 1) get feedback on the fact that a module is being
+installed 2) get to know if there are any installation problems. Also
+other people like you may look at the test reports to see how
+successful they are before choosing the version of a module to
+install.
+
+CPAN::Reporter is easy to install and configure like this:
+
+  perl -MCPAN -e shell
+  cpan> install CPAN::Reporter
+  cpan> reload cpan
+  cpan> o conf init test_report
+
+Simply answer the questions to configure CPAN::Reporter.
+
+You can find the CPAN testers wiki at L<http://wiki.cpantesters.org/>
+and the installation guide for CPAN::Reporter at
+L<http://wiki.cpantesters.org/wiki/CPANInstall>.
 
 =head1 REQUIREMENTS
 
