@@ -50,6 +50,7 @@ WriteMakefile(
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/DBIx/Log4perl.pm', # retrieve abstract from module
        AUTHOR         => 'Martin J. Evans <mjevans@cpan.org>') : ()),
+    NO_META => 1
 );
 
 
