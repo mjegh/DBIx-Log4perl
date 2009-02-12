@@ -413,8 +413,9 @@ __END__
 
 =head1 NAME
 
-DBIx::Log4perl - Perl extension for DBI to selectively log SQL,
-parameters, result-sets, transactions etc to a Log::Log4perl handle.
+DBIx::Log4perl - Perl extension for DBI to selectively log DBI
+methods, SQL, parameters, result-sets, transactions etc to a
+Log::Log4perl handle.
 
 =head1 SYNOPSIS
 
