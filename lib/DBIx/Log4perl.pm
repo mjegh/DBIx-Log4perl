@@ -297,6 +297,10 @@ sub _error_handler {
 	}
     }
 
+    if (exists($dbh->{Callbacks})) {
+        $out .= "  Callbacks exist for " .
+            join(",", keys(%{$dbh->{Callbacks}})) . "\n";
+    }
     local $Carp::MaxArgLen = 256;
     $out .= "  " .Carp::longmess("DBI error trap");
     $out .= "  " . "=" x 60 . "\n";
@@ -429,9 +433,9 @@ Log::Log4perl handle.
   or
 
   use DBIx::Log4perl;
-  my $dbh = DBIx::Log4perl->connect('DBI:odbc:mydsn', $user, $pass,
+  my $dbh = DBIx::Log4perl->connect('dbi:ODBC:mydsn', $user, $pass,
                                     {DBIx_l4p_init => "/etc/mylog.conf",
-                                     DBIx_l4p_class => "My::Package");
+                                     DBIx_l4p_class => "My::Package"});
   $dbh->DBI_METHOD(args);
 
 =head1 DESCRIPTION

@@ -8,6 +8,20 @@ package DBIx::Log4perl::db;
 @DBIx::Log4perl::db::ISA = qw(DBI::db DBIx::Log4perl);
 use DBIx::Log4perl::Constants qw (:masks $LogMask);
 
+sub STORE{
+    my $dbh = shift;
+    my @args = @_;
+
+    my $h = $dbh->{private_DBIx_Log4perl};
+    # as we don't set private_DBIx_Log4perl until the connect method sometimes
+    # $h will not be set
+    $dbh->_dbix_l4p_debug($h, 2, "STORE($h->{dbh_no})", @args)
+        if ($h && ($h->{logmask} & DBIX_L4P_LOG_INPUT));
+
+
+    return $dbh->SUPER::STORE(@args);
+}
+
 sub get_info
 {
     my ($dbh, @args) = @_;
@@ -222,7 +236,7 @@ sub disconnect {
 	}
     }
     return $dbh->SUPER::disconnect;
-    
+
 }
 
 sub begin_work {
@@ -244,7 +258,7 @@ sub rollback {
 
     return $dbh->SUPER::rollback;
 }
-  
+
 sub commit {
     my $dbh = shift;
 
