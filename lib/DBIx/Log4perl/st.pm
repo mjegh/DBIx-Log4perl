@@ -11,9 +11,7 @@ use DBIx::Log4perl::Constants qw (:masks $LogMask);
 sub finish {
     my ($sth) = shift;
 
-    _unseen_sth($sth) if (!exists($sth->{private_DBIx_Log4perl}));
-
-    my $h = $sth->{private_DBIx_Log4perl};
+    my $h = _unseen_sth($sth);
 
     $sth->_dbix_l4p_debug($h, 2,
                           "finish($h->{dbh_no}.$sth->{private_DBIx_st_no})")
@@ -203,9 +201,7 @@ sub bind_param_array {
 sub fetch {			# alias for fetchrow_arrayref
     my($sth, @args) = @_;
 
-    _unseen_sth($sth) if (!exists($sth->{private_DBIx_Log4perl}));
-
-    my $h = $sth->{private_DBIx_Log4perl};
+    my $h = _unseen_sth($sth);
 
     my $res = $sth->SUPER::fetch(@args);
     $sth->_dbix_l4p_debug($h, 2,
@@ -218,9 +214,7 @@ sub fetch {			# alias for fetchrow_arrayref
 sub fetchrow_arrayref {			# alias for fetchrow_arrayref
     my($sth, @args) = @_;
 
-    _unseen_sth($sth) if (!exists($sth->{private_DBIx_Log4perl}));
-
-    my $h = $sth->{private_DBIx_Log4perl};
+    my $h =_unseen_sth($sth);
 
     my $res = $sth->SUPER::fetchrow_arrayref(@args);
     $sth->_dbix_l4p_debug($h, 2,
@@ -234,9 +228,7 @@ sub fetchrow_arrayref {			# alias for fetchrow_arrayref
 sub fetchrow_array {
     my ($sth, @args) = @_;
 
-    _unseen_sth($sth) if (!exists($sth->{private_DBIx_Log4perl}));
-
-    my $h = $sth->{private_DBIx_Log4perl};
+    my $h = _unseen_sth($sth);
 
     my @row = $sth->SUPER::fetchrow_array(@args);
     $sth->_dbix_l4p_debug($h, 2,
@@ -250,9 +242,7 @@ sub fetchrow_array {
 sub fetchrow_hashref {
     my($sth, @args) = @_;
 
-    _unseen_sth($sth) if (!exists($sth->{private_DBIx_Log4perl}));
-
-    my $h = $sth->{private_DBIx_Log4perl};
+    my $h = _unseen_sth($sth);
 
     my $res = $sth->SUPER::fetchrow_hashref(@args);
     $sth->_dbix_l4p_perl(2,
@@ -264,19 +254,25 @@ sub fetchrow_hashref {
 }
 
 #
-# _unseen_sth is called if we come across a statement handle which was not
-# created via the prepare method e.g., a statement handle DBD::Oracle
+# _unseen_sth is called when we might come across a statement handle which was
+* not created via the prepare method e.g., a statement handle DBD::Oracle
 # magicked into existence when a function or procedure returns a cursor.
 # We need to save the private log handle and set the statement number.
-# 
+#
 sub _unseen_sth
 {
     my $sth = shift;
 
-    my $dbh = $sth->FETCH('Database');
-    $sth->{private_DBIx_Log4perl} = $dbh->{private_DBIx_Log4perl};
-    $sth->{private_DBIx_st_no} =
-        $dbh->{private_DBIx_Log4perl}->{new_stmt_no}();
+    if (!exists($sth->{private_DBIx_Log4perl})) {
+        my $dbh = $sth->FETCH('Database');
+        my $p = $dbh->{private_DBIx_Log4perl};
+        $sth->{private_DBIx_Log4perl} = $p;
+        $sth->{private_DBIx_st_no} =
+            $dbh->{private_DBIx_Log4perl}->{new_stmt_no}();
+        return $p;
+    } else {
+        return $sth->{private_DBIx_Log4perl};
+    }
 }
 
 1;

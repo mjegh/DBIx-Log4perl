@@ -6,6 +6,8 @@ Revision history for Perl extension DBIx::Log4perl.
   Added logging of CallBacks existence in the error handler
   log the db::STORE method (when we can)
 
+  Small optimisation in the way _unseen_sth is used in st.pm.
+
 0.13  Thur November 6 2008
 
   Fixed bug in last_insert_id which was missing the level argument
