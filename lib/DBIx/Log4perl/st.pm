@@ -255,7 +255,7 @@ sub fetchrow_hashref {
 
 #
 # _unseen_sth is called when we might come across a statement handle which was
-* not created via the prepare method e.g., a statement handle DBD::Oracle
+# not created via the prepare method e.g., a statement handle DBD::Oracle
 # magicked into existence when a function or procedure returns a cursor.
 # We need to save the private log handle and set the statement number.
 #
