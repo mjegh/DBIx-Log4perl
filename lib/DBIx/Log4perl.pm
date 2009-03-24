@@ -260,7 +260,7 @@ sub _error_handler {
     if (exists($h->{ParamValues}) && $h->{ParamValues}) {
 	$out .= "  ParamValues captured in HandleSetErr:\n    ";
 	foreach (sort keys %{$h->{ParamValues}}) {
-	    $out .= DBI::neat($h->{ParamValues}->{$_}) . ",";
+	    $out .= "$_=" . DBI::neat($h->{ParamValues}->{$_}) . ",";
 	}
 	$out .= "\n";
     }
@@ -268,7 +268,7 @@ sub _error_handler {
 	my $str = "";
 	if ($handle->{ParamValues}) {
 	    foreach (sort keys %{$handle->{ParamValues}}) {
-		$str .= DBI::neat($handle->{ParamValues}->{$_}) . ",";
+		$str .= "$_=" . DBI::neat($handle->{ParamValues}->{$_}) . ",";
 	    }
 	}
 	$out .= "  ParamValues: $str\n";
@@ -290,7 +290,7 @@ sub _error_handler {
 	    if (exists($stmt->{ParamValues}) && $stmt->{ParamValues}) {
 		$out .= '   Params(';
 		foreach (sort keys %{$stmt->{ParamValues}}) {
-		    $out .= DBI::neat($stmt->{ParamValues}->{$_}) . ",";
+		    $out .= "$_=" . DBI::neat($stmt->{ParamValues}->{$_}) . ",";
 		}
 		$out .= ")\n";
 	    }

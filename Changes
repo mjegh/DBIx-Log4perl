@@ -1,12 +1,18 @@
 Revision history for Perl extension DBIx::Log4perl.
 
-0.14  XXXX XXXXXXXX X XXXX
+0.14  Tues March 24 2009
 
   Fixed a few small bugs in SYNOPSIS section.
+
   Added logging of CallBacks existence in the error handler
   log the db::STORE method (when we can)
 
   Small optimisation in the way _unseen_sth is used in st.pm.
+
+  When outputting the ParamValues in the error handler they were
+  sorted on parameter name which is confusing since the parameter 10
+  (or :p10) comes after 1 (or :p1). Changed the output to name the
+  parameter market as well.
 
 0.13  Thur November 6 2008
 
