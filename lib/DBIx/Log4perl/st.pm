@@ -87,9 +87,14 @@ sub execute {
     }
 
     if (!$ret) {		# error
-	$sth->_dbix_l4p_error(2, "\tfailed with " . DBI::neat($sth->errstr))
-	    if (($h->{logmask} & DBIX_L4P_LOG_ERRCAPTURE) && # logging errors
-		(caller !~ /^DBD::/o)); # not called from DBD e.g. execute_array
+        if (($h->{logmask} & DBIX_L4P_LOG_ERRCAPTURE) && # logging errors
+                (caller !~ /^DBD::/o)) { # ! called from DBD e.g. execute_array
+            if ((exists($h->{err_regexp}) && ($sth->err !~ $h->{err_regexp})) ||
+                    (!exists($h->{err_regexp}))) {
+                $sth->_dbix_l4p_error(
+                    2, "\tfailed with " . DBI::neat($sth->errstr));
+            }
+        }
     } elsif (defined($ret) && (!$h->{dbd_specific})) {
         $sth->_dbix_l4p_debug(
             $h, 2, "affected($h->{dbh_no}.$sth->{private_DBIx_st_no})", $ret)

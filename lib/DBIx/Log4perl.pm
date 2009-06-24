@@ -649,10 +649,10 @@ will ignore DBIx_l4p_log and DBIx_l4p_init.
 
 =item C<DBIx_l4p_ignore_err_regexp>
 
-A regular expression which will be matched against $DBI::err in
-the error handler and if it matches no diagnostics will be output;
-the handler will just return (maybe causing the next handler in the
-chain to be called if there is one).
+A regular expression which will be matched against $DBI::err in the
+error handler and execute and if it matches no diagnostics will be
+output; the handler will just return (maybe causing the next handler
+in the chain to be called if there is one).
 
 An example of where this can be useful is if you are raising
 application errors in your procedures (e.g., RAISE_APPLICATION_ERROR
@@ -662,9 +662,7 @@ procedure and raise an error when the session is not found. You
 probably don't want all the information DBIx::Log4perl normally
 outputs to the error log about this error in which case you set the
 regular expression to match your error number and it will no longer
-appear in the log. Of course, your execute call will say fail and
-currently this will still be reported. I may change this in the
-future to stop that one too.
+appear in the log.
 
 =back
 
