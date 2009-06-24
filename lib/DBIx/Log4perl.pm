@@ -12,7 +12,7 @@ use DBIx::Log4perl::Constants qw (:masks $LogMask);
 use DBIx::Log4perl::db;
 use DBIx::Log4perl::st;
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 require Exporter;
 our @ISA = qw(Exporter DBI);		# look in DBI for anything we don't do
 
@@ -144,7 +144,8 @@ sub _dbix_l4p_attr_map {
     return {DBIx_l4p_logger => 'logger',
 	    DBIx_l4p_init => 'init',
 	    DBIx_l4p_class => 'class',
-	    DBIx_l4p_logmask => 'logmask'
+	    DBIx_l4p_logmask => 'logmask',
+            DBIx_l4p_ignore_err_regexp => 'err_regexp'
 	   };
 }
 
@@ -221,6 +222,11 @@ sub _error_handler {
     $lh = $h->{logger} if ($h && exists($h->{logger}));
     return 0 if (!$lh);
 
+    if ($h && exists($h->{err_regexp})) {
+        if ($dbh->err =~ $h->{err_regexp}) {
+            goto FINISH;
+        }
+    }
     # start with error message
     $out .=  '  ' . '=' x 60 . "\n  $msg\n";
 
@@ -305,6 +311,8 @@ sub _error_handler {
     $out .= "  " .Carp::longmess("DBI error trap");
     $out .= "  " . "=" x 60 . "\n";
     $lh->fatal($out);
+
+  FINISH:
     if ($h && exists($h->{ErrorHandler})) {
       return $h->{ErrorHandler}($msg, $handle, $method_ret);
     } else {
@@ -346,12 +354,15 @@ sub connect {
 	# save log mask
 	$h{logmask} = $attr->{DBIx_l4p_logmask}
 	  if (exists($attr->{DBIx_l4p_logmask}));
-
+        # save error regexp
+        $h{err_regexp} = $attr->{DBIx_l4p_ignore_err_regexp}
+            if (exists($attr->{DBIx_l4p_ignore_err_regexp}));
 	# remove our attrs from connection attrs
 	delete $attr->{DBIx_l4p_init};
 	delete $attr->{DBIx_l4p_class};
 	delete $attr->{DBIx_l4p_logger};
 	delete $attr->{DBIx_l4p_logmask};
+        delete $attr->{DBIx_l4p_ignore_err_regexp};
     }
     # take global log mask if non defined
     $h{logmask} = $LogMask if (!exists($h{logmask}));
@@ -635,6 +646,25 @@ See L<Log::Log4perl>.
 If you have already initialised and created your own Log::Log4perl
 handle you can pass it in as DBIx_l4p_logger and C<DBIx::Log4perl>
 will ignore DBIx_l4p_log and DBIx_l4p_init.
+
+=item C<DBIx_l4p_ignore_err_regexp>
+
+A regular expression which will be matched against $DBI::err in
+the error handler and if it matches no diagnostics will be output;
+the handler will just return (maybe causing the next handler in the
+chain to be called if there is one).
+
+An example of where this can be useful is if you are raising
+application errors in your procedures (e.g., RAISE_APPLICATION_ERROR
+in Oracle) where the error indicates something that is expected. Say
+you validate a web session by looking for the session ID via a
+procedure and raise an error when the session is not found. You
+probably don't want all the information DBIx::Log4perl normally
+outputs to the error log about this error in which case you set the
+regular expression to match your error number and it will no longer
+appear in the log. Of course, your execute call will say fail and
+currently this will still be reported. I may change this in the
+future to stop that one too.
 
 =back
 

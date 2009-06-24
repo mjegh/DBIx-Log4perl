@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::Log4perl.
 
+0.15  Wed June 24 2009
+
+  Added the DBIx_l4p_ignore_err_regexp attribute.
+
 0.14  Tues March 24 2009
 
   Fixed a few small bugs in SYNOPSIS section.
