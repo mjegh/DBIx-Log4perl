@@ -31,6 +31,7 @@ sub get_info
 
     $dbh->_dbix_l4p_debug($h, 2, "get_info($h->{dbh_no})", @args, $value)
         if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+    return $value;
 }
 sub prepare {
     my($dbh, @args) = @_;
