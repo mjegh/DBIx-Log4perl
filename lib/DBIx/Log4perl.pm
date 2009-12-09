@@ -12,7 +12,7 @@ use DBIx::Log4perl::Constants qw (:masks $LogMask);
 use DBIx::Log4perl::db;
 use DBIx::Log4perl::st;
 
-our $VERSION = '0.16';
+our $VERSION = '0.17';
 require Exporter;
 our @ISA = qw(Exporter DBI);		# look in DBI for anything we don't do
 
@@ -331,8 +331,6 @@ sub connect {
     $h{dbh_no} = &$_counter();
     $h{new_stmt_no} = _make_counter(0); # get a new stmt count for this dbh
 
-    local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + 1;
-
     my $log;
     if ($attr) {
       # check we have not got DBIx_l4p_init without DBIx_l4p_log or vice versa
@@ -380,6 +378,8 @@ sub connect {
     }
     $h{logger} = Log::Log4perl->get_logger() if (!exists($h{logger}));
     $_glogger = $h{logger};
+    # make sure you don't change the depth before calling get_logger:
+    local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + 1;
 
     my $dbh = $drh->SUPER::connect($dsn, $user, $pass, $attr);
     return $dbh if (!$dbh);
