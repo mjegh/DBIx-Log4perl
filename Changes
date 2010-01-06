@@ -1,6 +1,10 @@
 Revision history for Perl extension DBIx::Log4perl.
 
-0.17  Wed December 9 2010
+0.18  XXX YYYYYYYY Z 2010
+
+  Minor speedups in bind_param, bind_param_inout and execute methods.
+
+0.17  Wed December 9 2009
 
   Fixed problem with no logging output when upgrading to Log::Log4perl
   1.26 and Perl 5.10.0. Was setting the log level before calling

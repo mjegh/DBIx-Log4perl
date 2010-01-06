@@ -29,26 +29,26 @@ sub finish {
 # fetching under
 #
 sub execute {
-    my ($sth, @args) = @_;
+    my $sth = shift;
     my $h = $sth->{private_DBIx_Log4perl};
 
     if (($h->{logmask} & DBIX_L4P_LOG_INPUT) &&
 	(caller !~ /^DBD::/o) &&
 	(!$h->{dbd_specific})) {
-	if (scalar(@args)) {
+	if (scalar(@_)) {
 	    $sth->_dbix_l4p_debug(
                 $h, 2,
                 "execute($h->{dbh_no}.$sth->{private_DBIx_st_no}) (" .
                     ($sth->{Statement} ? $sth->{Statement} : '') . ')',
-                @args);
+                @_);
 	} else {
 	    $sth->_dbix_l4p_debug(
                 $h, 2,
-                "execute($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args);
+                "execute($h->{dbh_no}.$sth->{private_DBIx_st_no})", @_);
 	}
     }
 
-    my $ret = $sth->SUPER::execute(@args);
+    my $ret = $sth->SUPER::execute(@_);
 
     #
     # If DBDSPECIFIC is enabled and this is DBD::Oracle we will attempt to
@@ -173,24 +173,25 @@ sub execute_array {
 }
 
 sub bind_param {
-    my($sth, @args) = @_;
+    my $sth = shift;
+    #my @args) = @_;
     my $h = $sth->{private_DBIx_Log4perl};
 
     $sth->_dbix_l4p_debug(
-        $h, 2, "bind_param($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args)
+        $h, 2, "bind_param($h->{dbh_no}.$sth->{private_DBIx_st_no})", @_)
         if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
 
-    return $sth->SUPER::bind_param(@args);
+    return $sth->SUPER::bind_param(@_);
 }
 
 sub bind_param_inout {
-    my($sth, @args) = @_;
+    my $sth = shift;
     my $h = $sth->{private_DBIx_Log4perl};
 
     $sth->_dbix_l4p_debug($h, 2,
-        "bind_param_inout($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args)
+        "bind_param_inout($h->{dbh_no}.$sth->{private_DBIx_st_no})", @_)
         if (($h->{logmask} & DBIX_L4P_LOG_INPUT) && (caller !~ /^DBD::/o));
-    return $sth->SUPER::bind_param_inout(@args);
+    return $sth->SUPER::bind_param_inout(@_);
 }
 
 sub bind_param_array {
