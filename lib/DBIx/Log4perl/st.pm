@@ -174,7 +174,7 @@ sub execute_array {
 
 sub bind_param {
     my $sth = shift;
-    #my @args) = @_;
+
     my $h = $sth->{private_DBIx_Log4perl};
 
     $sth->_dbix_l4p_debug(
@@ -270,11 +270,9 @@ sub _unseen_sth
     my $sth = shift;
 
     if (!exists($sth->{private_DBIx_Log4perl})) {
-        my $dbh = $sth->FETCH('Database');
-        my $p = $dbh->{private_DBIx_Log4perl};
+        my $p = $sth->FETCH('Database')->{private_DBIx_Log4perl};
         $sth->{private_DBIx_Log4perl} = $p;
-        $sth->{private_DBIx_st_no} =
-            $dbh->{private_DBIx_Log4perl}->{new_stmt_no}();
+        $sth->{private_DBIx_st_no} = $p->{new_stmt_no}();
         return $p;
     } else {
         return $sth->{private_DBIx_Log4perl};
