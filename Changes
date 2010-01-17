@@ -1,10 +1,13 @@
 Revision history for Perl extension DBIx::Log4perl.
 
-0.18  XXX YYYYYYYY Z 2010
+0.18  Mon January 18 2010
 
   Minor speedups in bind_param, bind_param_inout and execute methods.
 
   Minor speedups in _unseen_sth.
+
+  Fix rt 53755 (fetchrow_array ignoring calling context). Thanks to
+  Bill Rios for spotting this and identifying the problem.
 
 0.17  Wed December 9 2009
 

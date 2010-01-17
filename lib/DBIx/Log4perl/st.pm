@@ -236,13 +236,23 @@ sub fetchrow_array {
 
     my $h = _unseen_sth($sth);
 
-    my @row = $sth->SUPER::fetchrow_array(@args);
-    $sth->_dbix_l4p_debug($h, 2,
-        sub {Data::Dumper->Dump(
-            [\@row],
-            ["fetchrow_array($h->{dbh_no}.$sth->{private_DBIx_st_no})"])})
-        if ($h->{logmask} & DBIX_L4P_LOG_OUTPUT);
-    return @row;
+    if (wantarray) {
+        my @row = $sth->SUPER::fetchrow_array(@args);
+        $sth->_dbix_l4p_debug($h, 2,
+            sub {Data::Dumper->Dump(
+                [\@row],
+                ["fetchrow_array($h->{dbh_no}.$sth->{private_DBIx_st_no})"])})
+            if ($h->{logmask} & DBIX_L4P_LOG_OUTPUT);
+        return @row;
+    } else {
+        my $row = $sth->SUPER::fetchrow_array(@args);
+        $sth->_dbix_l4p_debug($h, 2,
+            sub {Data::Dumper->Dump(
+                [$row],
+                ["fetchrow_array($h->{dbh_no}.$sth->{private_DBIx_st_no})"])})
+            if ($h->{logmask} & DBIX_L4P_LOG_OUTPUT);
+        return $row;
+    }
 }
 
 sub fetchrow_hashref {
