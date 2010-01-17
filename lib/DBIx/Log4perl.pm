@@ -707,7 +707,8 @@ use:
 to make Log::Log4perl prefix the line with a timestamp, module name and
 filename. DBIx::Log4perl sets C<$Log::Log4perl::caller_depth> in each
 method so when Log4perl outputs the module/file DBIx::Log4perl
-is ignored.
+is ignored. This is extremely useful if you need to see where a DBI
+method is called from.
 
 =head1 FORMAT OF LOG
 
