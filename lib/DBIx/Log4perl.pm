@@ -730,7 +730,7 @@ you will get:
 
 In this latter case the SQL is repeated for convenience but this only
 occurs if C<execute> is called with parameters. If C<execute> is called
-without any arguments the SQL is no repeated in the C<execute>.
+without any arguments the SQL is not repeated in the C<execute>.
 
 The numbers in the () after a method name indicate which connection or
 statement handle the operation was performed on. The first connection
@@ -834,7 +834,7 @@ o the connection the error occurred in
 
 o the handle type the error occurred on, db or stmt (db in this case)
 
-o item Other possible SQL that may be in error under this db
+o Other possible SQL that may be in error under this db
 connection e.g. if you were executing multiple statements on a single
 db connection
 
@@ -1022,7 +1022,7 @@ M. J. Evans, E<lt>mjevans@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2006, 2007, 2008 by M. J. Evans
+Copyright (C) 2006, 2007, 2008, 2009, 2010 by M. J. Evans
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.7 or,
