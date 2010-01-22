@@ -31,16 +31,6 @@ our @EXPORT_MASKS = qw(DBIX_L4P_LOG_DEFAULT
 our %EXPORT_TAGS= (masks => \@EXPORT_MASKS);
 Exporter::export_ok_tags('masks'); # all tags must be in EXPORT_OK
 
-my $_counter;                   # to hold sub to count
-BEGIN {
-    my $x = sub {
-        my $start = shift;
-        return sub {$start++}};
-    $_counter = &$x(0);         # used to count dbh connections
-}
-
-my $_glogger;
-
 sub _dbix_l4p_debug {
     my ($self, $h, $level, $thing, @args) = @_;
 
@@ -141,11 +131,11 @@ sub _dbix_l4p_error {
 }
 
 sub _dbix_l4p_attr_map {
-    return {DBIx_l4p_logger => 'logger',
-	    DBIx_l4p_init => 'init',
-	    DBIx_l4p_class => 'class',
-	    DBIx_l4p_logmask => 'logmask',
-            DBIx_l4p_ignore_err_regexp => 'err_regexp'
+    return {dbix_l4p_logger => 'logger',
+	    dbix_l4p_init => 'init',
+	    dbix_l4p_class => 'class',
+	    dbix_l4p_logmask => 'logmask',
+            dbix_l4p_ignore_err_regexp => 'err_regexp'
 	   };
 }
 
@@ -184,234 +174,29 @@ sub dbix_l4p_setattr {
     1;
 }
 
-#
-# set_err handler so we can capture ParamValues before a statement
-# is destroyed.
-# If the use of DBIx::Log4perl passed in an error handler that is
-# called before returning.
-#
-sub _set_err_handler {
-    my ($handle, $err, $errstr, $state, $method) = @_;
-
-    # Capture ParamValues
-    if ($handle) {
-	my $h = $handle->{private_DBIx_Log4perl};
-	$h->{ParamValues} = $handle->{ParamValues}
-	    if (exists($handle->{ParamValues}));
-	return $h->{HandleSetErr}(@_) if (exists($h->{HandleSetErr}));
-    }
-    return 0;
-}
-#
-# Error handler to capture errors and log them
-# Whatever, errors are passed on.
-# if the user of DBIx::Log4perl passed in an error handler that is called
-# before returning.
-#
-sub _error_handler {
-    my ($msg, $handle, $method_ret) = @_;
-
-    local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + 1;
-
-    my $dbh = $handle;
-    my $lh;
-    my $h = $handle->{private_DBIx_Log4perl};
-    my $out = '';
-
-    $lh = $_glogger;
-    $lh = $h->{logger} if ($h && exists($h->{logger}));
-    return 0 if (!$lh);
-
-    if ($h && exists($h->{err_regexp})) {
-        if ($dbh->err =~ $h->{err_regexp}) {
-            goto FINISH;
-        }
-    }
-    # start with error message
-    $out .=  '  ' . '=' x 60 . "\n  $msg\n";
-
-    if ($DBI::lasth) {
-	$out .= "  lasth type: $DBI::lasth->{Type}\n"
-	    if ($DBI::lasth->{Type});
-	$out .= "  lasth Statement ($DBI::lasth):\n    " .
-	    "$DBI::lasth->{Statement}\n"
-		if ($DBI::lasth->{Statement});
-    }
-    # get db handle if we have an st
-    my $type = $handle->{Type};
-    my $sql;
-    if ($type eq 'st') {	# given statement handle
-	$dbh = $handle->{Database};
-	$sql = $handle->{Statement};
-    } else {
-	# given db handle
-	# We've got other stmts under this db but we'll deal with those later
-	$sql = 'Possible SQL: ';
-	$sql .= "/$h->{Statement}/" if (exists($h->{Statement}));
-	$sql .= "/$dbh->{Statement}/"
-	  if ($dbh->{Statement} &&
-		(exists($h->{Statement}) &&
-		 ($dbh->{Statement} ne $h->{Statement})));
-    }
-
-    my $dbname = exists($dbh->{Name}) ? $dbh->{Name} : "";
-    my $username = exists($dbh->{Username}) ? $dbh->{Username} : "";
-    $out .= "  DB: $dbname, Username: $username\n";
-    $out .= "  handle type: $type\n  SQL: " . DBI::neat($sql) . "\n";
-    $out .= '  db Kids=' . $dbh->{Kids} .
-	', ActiveKids=' . $dbh->{ActiveKids} . "\n";
-    $out .= "  DB errstr: " . $handle->errstr . "\n"
-	if ($handle->errstr && ($handle->errstr ne $msg));
-
-    if (exists($h->{ParamValues}) && $h->{ParamValues}) {
-	$out .= "  ParamValues captured in HandleSetErr:\n    ";
-	foreach (sort keys %{$h->{ParamValues}}) {
-	    $out .= "$_=" . DBI::neat($h->{ParamValues}->{$_}) . ",";
-	}
-	$out .= "\n";
-    }
-    if ($type eq 'st') {
-	my $str = "";
-	if ($handle->{ParamValues}) {
-	    foreach (sort keys %{$handle->{ParamValues}}) {
-		$str .= "$_=" . DBI::neat($handle->{ParamValues}->{$_}) . ",";
-	    }
-	}
-	$out .= "  ParamValues: $str\n";
-	$out .= "  " .
-	  Data::Dumper->Dump([$handle->{ParamArrays}], ['ParamArrays'])
-	      if ($handle->{ParamArrays});
-    }
-    my @substmts;
-    # get list of statements under the db
-    push @substmts, $_ for (grep { defined } @{$dbh->{ChildHandles}});
-    $out .= "  " . scalar(@substmts) . " sub statements:\n";
-    if (scalar(@substmts)) {
-	foreach my $stmt (@substmts) {
-	    $out .= "  stmt($stmt):\n";
-	    $out .= '    SQL(' . $stmt->{Statement} . ")\n  "
-		if ($stmt->{Statement} &&
-		    (exists($h->{Statement}) &&
-		     ($h->{Statement} ne $stmt->{Statement})));
-	    if (exists($stmt->{ParamValues}) && $stmt->{ParamValues}) {
-		$out .= '   Params(';
-		foreach (sort keys %{$stmt->{ParamValues}}) {
-		    $out .= "$_=" . DBI::neat($stmt->{ParamValues}->{$_}) . ",";
-		}
-		$out .= ")\n";
-	    }
-	}
-    }
-
-    if (exists($dbh->{Callbacks})) {
-        $out .= "  Callbacks exist for " .
-            join(",", keys(%{$dbh->{Callbacks}})) . "\n";
-    }
-    local $Carp::MaxArgLen = 256;
-    $out .= "  " .Carp::longmess("DBI error trap");
-    $out .= "  " . "=" x 60 . "\n";
-    $lh->fatal($out);
-
-  FINISH:
-    if ($h && exists($h->{ErrorHandler})) {
-      return $h->{ErrorHandler}($msg, $handle, $method_ret);
-    } else {
-      return 0;			# pass error on
-    }
-}
-
-sub _make_counter {
-    my $start = shift;
-    return sub {$start++}
-};
-
 sub connect {
-    my ($drh, $dsn, $user, $pass, $attr) = @_;
-    my %h = ();
-    $h{dbh_no} = &$_counter();
-    $h{new_stmt_no} = _make_counter(0); # get a new stmt count for this dbh
 
-    my $log;
-    if ($attr) {
-      # check we have not got DBIx_l4p_init without DBIx_l4p_log or vice versa
-	my ($a, $b) = (exists($attr->{DBIx_l4p_init}),
-		       exists($attr->{DBIx_l4p_class}));
-	croak ('DBIx_l4p_init specified without DBIx_l4p_class or vice versa')
-	  if (($a xor $b));
-	# if passed a Log4perl log handle use that
-	if (exists($attr->{DBIx_l4p_logger})) {
-	    $h{logger} = $attr->{DBIx_l4p_logger};
-	} elsif ($a && $b) {
-	    Log::Log4perl->init($attr->{DBIx_l4p_init});
-	    $h{logger} = Log::Log4perl->get_logger($attr->{DBIx_l4p_class});
-	    $h{init} = $attr->{DBIx_l4p_init};
-	    $h{class} = $attr->{DBIx_l4p_class};
-	} else {
-	    $h{logger} = Log::Log4perl->get_logger(); # "DBIx::Log4perl"
-	}
-	# save log mask
-	$h{logmask} = $attr->{DBIx_l4p_logmask}
-	  if (exists($attr->{DBIx_l4p_logmask}));
-        # save error regexp
-        $h{err_regexp} = $attr->{DBIx_l4p_ignore_err_regexp}
-            if (exists($attr->{DBIx_l4p_ignore_err_regexp}));
-	# remove our attrs from connection attrs
-	delete $attr->{DBIx_l4p_init};
-	delete $attr->{DBIx_l4p_class};
-	delete $attr->{DBIx_l4p_logger};
-	delete $attr->{DBIx_l4p_logmask};
-        delete $attr->{DBIx_l4p_ignore_err_regexp};
-    }
-    # take global log mask if non defined
-    $h{logmask} = $LogMask if (!exists($h{logmask}));
-    #
-    # If capturing errors then save any error handler and set_err Handler
-    # passed to us and replace with our own.
-    #
-    if ($h{logmask} & DBIX_L4P_LOG_ERRCAPTURE) {
-	$h{HandleError} = $attr->{HandleError}
-	    if (exists($attr->{HandleError}));
-	$attr->{HandleError} = \&_error_handler;
-	$h{HandleSetErr} = $attr->{HandleSetErr}
-	    if (exists($attr->{HandleSetErr}));
-	$attr->{HandleSetErr} = \&_set_err_handler;
-    }
-    $h{logger} = Log::Log4perl->get_logger() if (!exists($h{logger}));
-    $_glogger = $h{logger};
-    # make sure you don't change the depth before calling get_logger:
-    local $Log::Log4perl::caller_depth = $Log::Log4perl::caller_depth + 1;
+    my ($drh, $dsn, $user, $pass, $attr) = @_;
 
     my $dbh = $drh->SUPER::connect($dsn, $user, $pass, $attr);
     return $dbh if (!$dbh);
 
-    $h{dbd_specific} = 0;
-    $dbh->{private_DBIx_Log4perl} = \%h;
-    if ($h{logmask} & DBIX_L4P_LOG_CONNECT) {
-	$h{logger}->debug("connect($h{dbh_no}): " .
-                              (defined($dsn) ? $dsn : '') . ', ' .
-			  (defined($user) ? $user : ''));
-	no strict 'refs';
-	my $v = "DBD::" . $dbh->{Driver}->{Name} . "::VERSION";
-	$h{logger}->info("DBI: " . $DBI::VERSION,
-			 ", DBIx::Log4perl: " . $DBIx::Log4perl::VERSION .
-			   ", Driver: " . $dbh->{Driver}->{Name} . "(" .
-			     $$v . ")");
-    }
     #
     # Enable dbms_output for DBD::Oracle else turn off DBDSPECIFIC as we have
     # no support for DBDSPECIFIC in any other drivers.
     # BUT only enable it if the log handle is doing debug as we only call
     # dbms_output_get in that case.
     #
-    $h{driver} = $dbh->{Driver}->{Name};
-    if (($h{logger}->is_debug()) &&
-            ($h{logmask} & DBIX_L4P_LOG_DBDSPECIFIC) &&
-                ($h{driver} eq 'Oracle')) {
+    my $h = $dbh->{private_DBIx_Log4perl};
+    $h->{dbd_specific} = 1;
+    if (($h->{logger}->is_debug()) &&
+            ($h->{logmask} & DBIX_L4P_LOG_DBDSPECIFIC) &&
+                ($h->{driver} eq 'Oracle')) {
 	$dbh->func('dbms_output_enable');
     } else {
-	$h{logmask} &= ~DBIX_L4P_LOG_DBDSPECIFIC;
+	$h->{logmask} &= ~DBIX_L4P_LOG_DBDSPECIFIC;
     }
-
+    $h->{dbd_specific} = 0;
     return $dbh;
 }
 
@@ -445,11 +230,14 @@ Log::Log4perl handle.
 
   use DBIx::Log4perl;
   my $dbh = DBIx::Log4perl->connect('dbi:ODBC:mydsn', $user, $pass,
-                                    {DBIx_l4p_init => "/etc/mylog.conf",
-                                     DBIx_l4p_class => "My::Package"});
+                                    {dbix_l4p_init => "/etc/mylog.conf",
+                                     dbix_l4p_class => "My::Package"});
   $dbh->DBI_METHOD(args);
 
 =head1 DESCRIPTION
+
+<B>NOTE: The names of DBIx::Log4perl attributes have changed in version
+0.18. They are now all lowercased as per the DBI specification.</B>
 
 C<DBIx::Log4perl> is a wrapper over DBI which adds logging of your DBI
 activity via a Log::Log4perl handle. Log::Log4perl has many advantages
@@ -468,13 +256,13 @@ DBIx::Log4perl adds the following methods over DBI.
 
 =head2 dbix_l4p_getattr
 
-  $h->dbxi_l4p_getattr('DBIx_l4p_logmask');
+  $h->dbxi_l4p_getattr('dbix_l4p_logmask');
 
 Returns the value for a DBIx::Log4perl attribute (see L</ATTRIBUTES>).
 
 =head2 dbix_l4p_setattr
 
- $h->dbix_l4p_setattr('DBIx_l4p_logmask', 1);
+ $h->dbix_l4p_setattr('dbix_l4p_logmask', 1);
 
 Set the value of the specified DBIx::Log4perl attribute
 (see L</ATTRIBUTES>).
@@ -623,7 +411,7 @@ C<DBIx::Log4perl> supports the following attributes:
 
 =over
 
-=item C<DBIx_l4p_init>
+=item C<dbix_l4p_init>
 
 This is the string to pass on to Log::Log4Perl's C<init> method. It is
 the name of the Log::Log4perl configuration file to use. e.g.
@@ -632,7 +420,7 @@ the name of the Log::Log4perl configuration file to use. e.g.
 
 See L<Log::Log4perl>.
 
-=item C<DBIx_l4p_log>
+=item C<dbix_l4p_log>
 
 This is the string to pass on to Log::Log4Perl's C<get_logger> method
 e.g.
@@ -641,13 +429,13 @@ e.g.
 
 See L<Log::Log4perl>.
 
-=item C<DBIx_l4p_logger>
+=item C<dbix_l4p_logger>
 
 If you have already initialised and created your own Log::Log4perl
-handle you can pass it in as DBIx_l4p_logger and C<DBIx::Log4perl>
-will ignore DBIx_l4p_log and DBIx_l4p_init.
+handle you can pass it in as C<dbix_l4p_logger> and C<DBIx::Log4perl>
+will ignore L</dbix_l4p_log> and L</dbix_l4p_init>.
 
-=item C<DBIx_l4p_ignore_err_regexp>
+=item C<dbix_l4p_ignore_err_regexp>
 
 A regular expression which will be matched against $DBI::err in the
 error handler and execute and if it matches no diagnostics will be

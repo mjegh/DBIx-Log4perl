@@ -71,6 +71,7 @@ sub execute {
     if (($h->{logger}->is_debug()) &&
         ($h->{logmask} & DBIX_L4P_LOG_DBDSPECIFIC) &&
     	($h->{driver} eq 'Oracle') && (!$h->{dbd_specific})) {
+
 	my ($errstr, $err, $state) = (
 	    $sth->errstr, $sth->err, $sth->state);
     	$h->{dbd_specific} = 1;
