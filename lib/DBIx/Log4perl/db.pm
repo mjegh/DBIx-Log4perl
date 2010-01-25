@@ -9,7 +9,8 @@ package DBIx::Log4perl::db;
 @DBIx::Log4perl::db::ISA = qw(DBI::db DBIx::Log4perl);
 use DBIx::Log4perl::Constants qw (:masks $LogMask);
 
-my $_glogger;                   # TO_DO what happens if we have more than one DBI
+# $_glogger is not relied upon - it is just a fallback
+my $_glogger;
 
 my $_counter;                   # to hold sub to count
 
