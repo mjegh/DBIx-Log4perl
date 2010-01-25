@@ -17,8 +17,9 @@ Revision history for Perl extension DBIx::Log4perl.
   connection number.
 
   Add support for clone.
-  NOTE: This changes introduces incompatilities from previous versions as
-        all attribute names have changed to become lower case.
+  NOTE: This changes introduces incompatibilities from previous
+        versions as all attribute names have changed to become lower
+        case.
 
 0.17  Wed December 9 2009
 
