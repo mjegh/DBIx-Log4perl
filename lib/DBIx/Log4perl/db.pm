@@ -313,10 +313,10 @@ sub connected {
     if ($h{logmask} & DBIX_L4P_LOG_ERRCAPTURE) {
 	$h{HandleError} = $attr->{HandleError}
 	    if (exists($attr->{HandleError}));
-	$attr->{HandleError} = \&_error_handler;
-	$>{HandleSetErr} = $attr->{HandleSetErr}
+	$h{HandleSetErr} = $attr->{HandleSetErr}
 	    if (exists($attr->{HandleSetErr}));
-	$attr->{HandleSetErr} = \&_set_err_handler;
+	$dbh->{HandleError} = \&_error_handler;
+	$dbh->{HandleSetErr} = \&_set_err_handler;
     }
     return;
 

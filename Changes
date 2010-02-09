@@ -1,5 +1,10 @@
 Revision history for Perl extension DBIx::Log4perl.
 
+0.19  Tues February 9 2010
+
+  0.18 inotrduced a bug which stopped the catching and reporting of
+  raised errors in DBI.
+
 0.18  Mon January 22 2010
 
   Minor speedups in bind_param, bind_param_inout and execute methods.
