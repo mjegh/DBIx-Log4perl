@@ -831,7 +831,7 @@ L<http://wiki.cpantesters.org/wiki/CPANInstall>.
 
 =over
 
-=item betting testing
+=item better testing
 
 =back
 
