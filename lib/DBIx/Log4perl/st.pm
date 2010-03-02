@@ -35,16 +35,27 @@ sub execute {
     if (($h->{logmask} & DBIX_L4P_LOG_INPUT) &&
 	(caller !~ /^DBD::/o) &&
 	(!$h->{dbd_specific})) {
+        my $params;
+        #if (defined($sth->{ParamValues})) {
+        #    $params = '{params => ';
+        #    foreach (sort keys %{$sth->{ParamValues}}) {
+        #        $params .= "$_=" . DBI::neat($h->{ParamValues}->{$_}) . ",";
+        #    }
+        #    $params .= '}';     # TO_DO not used yet
+        #}
 	if (scalar(@_)) {
 	    $sth->_dbix_l4p_debug(
                 $h, 2,
                 "execute($h->{dbh_no}.$sth->{private_DBIx_st_no}) (" .
-                    ($sth->{Statement} ? $sth->{Statement} : '') . ')',
-                @_);
+                    ($sth->{Statement} ? $sth->{Statement} : '') . ')', @_);
 	} else {
+            my @param_info;
+            push @param_info, $sth->{ParamValues}, $sth->{ParamTypes}
+                if ($h->{logmask} & DBIX_L4P_LOG_DELAYBINDPARAM);
 	    $sth->_dbix_l4p_debug(
                 $h, 2,
-                "execute($h->{dbh_no}.$sth->{private_DBIx_st_no})", @_);
+                "execute($h->{dbh_no}.$sth->{private_DBIx_st_no})",
+                @param_info);
 	}
     }
 
@@ -166,7 +177,7 @@ sub execute_array {
 	$sth->_dbix_l4p_debug($h, 2, "executed $executed, affected " .
 				  DBI::neat($affected));
     }
-    $sth->_dbix_l4p_info(2, sub {Data::Dumper->Dump(
+    $sth->_dbix_l4p_debug(2, sub {Data::Dumper->Dump(
 	[$array_tuple_status], ['ArrayTupleStatus'])})
 	if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
     return $executed unless wantarray;
@@ -180,7 +191,8 @@ sub bind_param {
 
     $sth->_dbix_l4p_debug(
         $h, 2, "bind_param($h->{dbh_no}.$sth->{private_DBIx_st_no})", @_)
-        if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+        if (($h->{logmask} & DBIX_L4P_LOG_INPUT) &&
+                (($h->{logmask} & DBIX_L4P_LOG_DELAYBINDPARAM) == 0));
 
     return $sth->SUPER::bind_param(@_);
 }

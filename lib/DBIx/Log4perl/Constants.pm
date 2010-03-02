@@ -15,6 +15,7 @@ use constant DBIX_L4P_LOG_ERRCAPTURE => 0x10;
 use constant DBIX_L4P_LOG_WARNINGS => 0x20;
 use constant DBIX_L4P_LOG_ERRORS => 0x40;
 use constant DBIX_L4P_LOG_DBDSPECIFIC => 0x80;
+use constant DBIX_L4P_LOG_DELAYBINDPARAM => 0x100;
 
 our $LogMask = DBIX_L4P_LOG_DEFAULT;
 
@@ -30,6 +31,7 @@ our @EXPORT_MASKS = qw(DBIX_L4P_LOG_DEFAULT
 		       DBIX_L4P_LOG_WARNINGS
 		       DBIX_L4P_LOG_ERRORS
 		       DBIX_L4P_LOG_DBDSPECIFIC
+                       DBIX_L4P_LOG_DELAYBINDPARAM
 		     );
 our %EXPORT_TAGS = (masks => \@EXPORT_MASKS);
 Exporter::export_ok_tags('masks');

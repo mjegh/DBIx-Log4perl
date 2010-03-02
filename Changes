@@ -1,8 +1,17 @@
 Revision history for Perl extension DBIx::Log4perl.
 
+0.20  DDDD March N 2010
+
+  Fix rt 55143 where execute_array was logging array tuple status at
+  INFO level instead of DEBUG level. Thanks to Eric Zylberstejn for
+  finding the problem and providing the fix.
+
+  Add the DBIX_L4P_LOG_DELAYBINDPARAM constant to delay logging of
+  bind_param until execute.
+
 0.19  Tues February 9 2010
 
-  0.18 inotrduced a bug which stopped the catching and reporting of
+  0.18 introduced a bug which stopped the catching and reporting of
   raised errors in DBI.
 
 0.18  Mon January 22 2010

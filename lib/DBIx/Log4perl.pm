@@ -12,7 +12,7 @@ use DBIx::Log4perl::Constants qw (:masks $LogMask);
 use DBIx::Log4perl::db;
 use DBIx::Log4perl::st;
 
-our $VERSION = '0.19';
+our $VERSION = '0.20';
 require Exporter;
 our @ISA = qw(Exporter DBI);		# look in DBI for anything we don't do
 
@@ -27,6 +27,7 @@ our @EXPORT_MASKS = qw(DBIX_L4P_LOG_DEFAULT
 		       DBIX_L4P_LOG_WARNINGS
 		       DBIX_L4P_LOG_ERRORS
 		       DBIX_L4P_LOG_DBDSPECIFIC
+		       DBIX_L4P_LOG_DELAYBINDPARAM
 		     );
 our %EXPORT_TAGS= (masks => \@EXPORT_MASKS);
 Exporter::export_ok_tags('masks'); # all tags must be in EXPORT_OK
@@ -250,6 +251,9 @@ if you use C<init_and_watch>).
 Different log levels allowing you to separate warnings, errors and fatals
 to different files.
 
+The ability to capture all the information available via DBI when an
+error occurs.
+
 =head1 METHODS
 
 DBIx::Log4perl adds the following methods over DBI.
@@ -305,7 +309,8 @@ DBIX_L4P_LOG_DBDSPECIFIC.
 
 =item DBIX_L4P_LOG_ALL
 
-Log everything, all possible masks ORed together.
+Log everything, all possible masks ORed together which also includes
+delaying the logging of bind_param (see L</DBIX_L4P_LOG_DELAYBINDPARAM>).
 
 =item DBIX_L4P_LOG_INPUT
 
@@ -400,6 +405,39 @@ returning to DBI.
 
 =back
 
+=item DBIX_L4P_LOG_DELAYBINDPARAM
+
+If set (and it is not the default) this prevents the logging of
+bind_param method calls and instead the bound parameters and parameter
+types (if available) are logged with the execute method
+instead. Example output for:
+
+    my $st = $ph->prepare(q/insert into mje2 values(?,?)/);
+    $st->bind_param(1, 1);
+    $st->bind_param(2, "fred");
+    $st->execute;
+
+will output something like:
+
+    DEBUG - prepare(0.1): 'insert into mje values(?,?)'
+    DEBUG - $execute(0.1) = [{':p1' => 1,':p2' => 'fred'},undef];
+    DEBUG - affected(0.1): 1
+
+instead of the more usual:
+
+    DEBUG - prepare(0.1): 'insert into mje values(?,?)'
+    DEBUG - $bind_param(0.1) = [1,1];
+    DEBUG - $bind_param(0.1) = [2,'fred'];
+    DEBUG - execute(0.1)
+    DEBUG - affected(0.1): 1
+
+where the parameter names and values are displayed in the {} after
+execute and the parameter types are the next argument. Few DBDs
+support the ParamTypes attribute in DBI and hence mostly these are
+displayed as C<undef> as in the above case which was using
+DBD::Oracle. Most (if not all) DBDs support ParamValues but you might
+want to check that before setting this flag.
+
 =back
 
 =head1 ATTRIBUTES
@@ -456,9 +494,9 @@ appear in the log.
 
 Although these attributes are supported the recommended way to use
 DBIx::Log4perl it to use Log::Log4perl in your application and call
-the C<Log::Log4Perl->init> to define your log4perl configuration file.
+the C<Log::Log4Perl-E<gt>init> to define your log4perl configuration file.
 DBIx::Log4perl will then call
-C<Log::Log4perl->get_logger("DBIx::Log4perl")> (as was intended by the
+C<Log::Log4perl-E<gt>get_logger("DBIx::Log4perl")> (as was intended by the
 authors of Log::Log4perl) and all you need is a
 C<log4perl.logger.DBIx.Log4perl> entry in your configuration file.
 
@@ -518,8 +556,11 @@ you will get:
   DEBUG - $execute(0.1) (insert into mytest values (?,?)) = [1,'one'];
 
 In this latter case the SQL is repeated for convenience but this only
-occurs if C<execute> is called with parameters. If C<execute> is called
-without any arguments the SQL is not repeated in the C<execute>.
+occurs if C<execute> is called with parameters. If C<execute> is
+called without any arguments the SQL is not repeated in the
+C<execute>. Also note the output will include bind_param calls if you
+bound parameters seperately but how this is logged depends on
+L</DBIX_L4P_LOG_DELAYBINDPARAM>.
 
 The numbers in the () after a method name indicate which connection or
 statement handle the operation was performed on. The first connection
@@ -757,7 +798,8 @@ Add your review of DBIx::Log4perl on L<http://cpanratings.perl.org>.
 =item submit test cases
 
 The test suite for DBIx::Log4perl is pitifully small. Any test cases
-would be gratefully received.
+would be gratefully received. In particular, it would be really nice
+to add support for Test::Database.
 
 =back
 
@@ -784,6 +826,14 @@ Simply answer the questions to configure CPAN::Reporter.
 You can find the CPAN testers wiki at L<http://wiki.cpantesters.org/>
 and the installation guide for CPAN::Reporter at
 L<http://wiki.cpantesters.org/wiki/CPANInstall>.
+
+=head1 TO_DO
+
+=over
+
+=item betting testing
+
+=back
 
 =head1 REQUIREMENTS
 
