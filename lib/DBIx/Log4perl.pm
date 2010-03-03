@@ -237,7 +237,7 @@ Log::Log4perl handle.
 
 =head1 DESCRIPTION
 
-B<NOTE: The names of DBIx::Log4perl attributes have changed in version
+B<NOTE: The names of DBIx::Log4perl L</ATTRIBUTES> have changed in version
 0.18. They are now all lowercased as per the DBI specification.>
 
 C<DBIx::Log4perl> is a wrapper over DBI which adds logging of your DBI
@@ -297,6 +297,12 @@ row would not ordinarily cause DBI's error handler to be called.
 This variable controls the amount of logging logged to the
 Log::Log4perl handle. There are a number of constants defined which
 may be ORed together to obtain the logging level you require:
+
+=head1 CONSTANTS
+
+The following constants may be imported via the C<:masks> group
+
+  use DBIx::Log4perl qw(:masks);
 
 =over
 
