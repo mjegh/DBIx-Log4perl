@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name: DBIx-Log4perl
 abstract: Log all Perl DBI calls Log::Log4perl
-version: 0.20
+version: 0.21
 version_from: lib/DBIx/Log4perl.pm
 author:
   - Martin J. Evans

@@ -177,7 +177,7 @@ sub execute_array {
 	$sth->_dbix_l4p_debug($h, 2, "executed $executed, affected " .
 				  DBI::neat($affected));
     }
-    $sth->_dbix_l4p_debug(2, sub {Data::Dumper->Dump(
+    $sth->_dbix_l4p_debug($h, 2, sub {Data::Dumper->Dump(
 	[$array_tuple_status], ['ArrayTupleStatus'])})
 	if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
     return $executed unless wantarray;
