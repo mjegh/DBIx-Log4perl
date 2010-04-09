@@ -6,7 +6,7 @@ Revision history for Perl extension DBIx::Log4perl.
   I did not have a good day yesterday - lesson to be learnt, do not
   release new versions to cpan late at night. Fixed bug introduced
   whilst attempting to fix rt 55143 (should only effect people using
-  execute_array and tuple status.
+  execute_array and tuple status).
 
   Minor pod formatting changes/fixes.
 
