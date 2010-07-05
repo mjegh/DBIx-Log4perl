@@ -27,7 +27,7 @@ ok ((! -r $conf1) || (! -r $conf2), "Log::Log4perl config exists");
 my $conf = $conf1 if (-r $conf1);
 $conf = $conf2 if (-r $conf2);
 
-config();
+($logtmp1, $logtmp2) = config();
 
 if (!defined($dsn) || ($dsn eq "")) {
     diag("Connection orientated test not run because no database connect information supplied");
@@ -38,16 +38,16 @@ my $dbh = DBIx::Log4perl->connect($dsn, $user, $password);
 ok($dbh, 'connect to db');
 BAIL_OUT("Failed to connect to database - all other tests abandoned")
 	if (!$dbh);
-ok(check_log(\$out), 'test for log output');
+ok(check_log(\$out, $logtmp2), 'test for log output');
 
 {
     local $dbh->{PrintError} = 0;
     eval {$dbh->do(qq/drop table $table/)};
 }
-ok(check_log(\$out), 'drop test table');
+ok(check_log(\$out, $logtmp2), 'drop test table');
 ok($dbh->do(qq/create table $table (a int primary key, b char(50))/),
    'create test table');
-ok(check_log(\$out), 'test for log output');
+ok(check_log(\$out, $logtmp2), 'test for log output');
 
 my $sth;
 
@@ -56,11 +56,11 @@ ok($sth = $dbh->prepare(qq/insert into $table values (?,?)/),
 SKIP: {
 	skip "prepare failed", 3 unless $sth;
 
-	ok(check_log(\$out), 'test for log output');
+	ok(check_log(\$out, $logtmp2), 'test for log output');
 
 	ok($sth->execute(1, 'one'), 'insert one');
-	ok(check_log(\$out), 'test for log output');
+	ok(check_log(\$out, $logtmp2), 'test for log output');
 };
 
 ok ($dbh->disconnect, 'disconnect');
-ok(check_log(\$out), 'test for log output');
+ok(check_log(\$out, $logtmp2), 'test for log output');

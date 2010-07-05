@@ -3,7 +3,7 @@ require 5.008;
 
 use strict;
 use warnings;
-use Carp qw(croak);
+use Carp qw(croak cluck);
 use Log::Log4perl;
 use Data::Dumper;
 
@@ -12,7 +12,7 @@ use DBIx::Log4perl::Constants qw (:masks $LogMask);
 use DBIx::Log4perl::db;
 use DBIx::Log4perl::st;
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 require Exporter;
 our @ISA = qw(Exporter DBI);		# look in DBI for anything we don't do
 

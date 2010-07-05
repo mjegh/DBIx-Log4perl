@@ -1,6 +1,11 @@
 Revision history for Perl extension DBIx::Log4perl.
 
 
+0.22  Mon July 5 2010
+
+  Changed simple.t test to avoid using piped Log::Log4perl::Appender::File
+  and use recreate instead.
+
 0.21  Wed March 3 2010
 
   I did not have a good day yesterday - lesson to be learnt, do not
