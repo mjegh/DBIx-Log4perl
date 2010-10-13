@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::Log4perl.
 
+0.23  Wed October 13 2010
+
+  Minor tweak to simple test and lib to ensure temporary files are removed
+  even if full test not run.
 
 0.22  Mon July 5 2010
 

@@ -37,7 +37,7 @@ print OUT "$password\n";
 print OUT "$table\n";
 close OUT;
 
-warn "\nPlease NOTE\nYou need to set and export the DBI_* environment variables or supply suitable values on the command line (see Perl Makefile.PL help) to run a complete test\n\n";
+warn "\nPlease NOTE\nYou need to set and export the DBI_* environment variables or supply suitable\nvalues on the command line (see Perl Makefile.PL --help) to run a complete test\n\n";
 
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.

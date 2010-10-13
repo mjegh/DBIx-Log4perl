@@ -1,5 +1,18 @@
 # $Id: simple.t 284 2006-09-07 13:50:57Z martin $
+use strict;
+use warnings;
+
 $^W = 1;
+
+my ($logtmp1, $logtmp2);
+
+END {
+    foreach my $tmpfile($logtmp1, $logtmp2) {
+        if (defined($tmpfile)) {
+            eval {unlink($tmpfile)};
+        }
+    }
+}
 
 push @INC, 't';
 require 'lib.pl';
@@ -8,7 +21,7 @@ my ($dsn,$user,$password,$table) = get_config();
 use Test::More;
 
 if (!defined($dsn) || ($dsn eq "")) {
-    plan tests => 6;
+    plan tests => 3;
 } else {
     plan tests => 17;
 }
@@ -16,6 +29,11 @@ if (!defined($dsn) || ($dsn eq "")) {
 use_ok('DBIx::Log4perl');
 use_ok('File::Spec');
 use_ok('Log::Log4perl');
+
+if (!defined($dsn) || ($dsn eq "")) {
+    diag("Connection orientated test not run because no database connect information supplied");
+    exit 0;
+}
 
 my $out;
 #########################
@@ -28,11 +46,6 @@ my $conf = $conf1 if (-r $conf1);
 $conf = $conf2 if (-r $conf2);
 
 ($logtmp1, $logtmp2) = config();
-
-if (!defined($dsn) || ($dsn eq "")) {
-    diag("Connection orientated test not run because no database connect information supplied");
-    exit 0;
-}
 
 my $dbh = DBIx::Log4perl->connect($dsn, $user, $password);
 ok($dbh, 'connect to db');
