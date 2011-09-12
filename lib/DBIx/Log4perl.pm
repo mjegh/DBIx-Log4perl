@@ -12,7 +12,7 @@ use DBIx::Log4perl::Constants qw (:masks $LogMask);
 use DBIx::Log4perl::db;
 use DBIx::Log4perl::st;
 
-our $VERSION = '0.23';
+our $VERSION = '0.24';
 require Exporter;
 our @ISA = qw(Exporter DBI);		# look in DBI for anything we don't do
 
@@ -479,6 +479,10 @@ If you have already initialised and created your own Log::Log4perl
 handle you can pass it in as C<dbix_l4p_logger> and C<DBIx::Log4perl>
 will ignore L</dbix_l4p_log> and L</dbix_l4p_init>.
 
+=item C<dbix_l4p_logmask>
+
+A mask of the flags defined under L</CONSTANTS>.
+
 =item C<dbix_l4p_ignore_err_regexp>
 
 A regular expression which will be matched against $DBI::err in the
@@ -867,7 +871,7 @@ M. J. Evans, E<lt>mjevans@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2006, 2007, 2008, 2009, 2010 by M. J. Evans
+Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 by M. J. Evans
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.7 or,
