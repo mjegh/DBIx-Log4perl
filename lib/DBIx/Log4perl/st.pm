@@ -274,7 +274,7 @@ sub fetchrow_hashref {
     my $h = _unseen_sth($sth);
 
     my $res = $sth->SUPER::fetchrow_hashref(@args);
-    $sth->_dbix_l4p_debug(2,
+    $sth->_dbix_l4p_debug($h, 2,
         sub {Data::Dumper->Dump(
             [$res],
             ["fetchrow_hashref($h->{dbh_no}.$sth->{private_DBIx_st_no})"])})
