@@ -1,6 +1,6 @@
 Revision history for Perl extension DBIx::Log4perl.
 
-0.24  Mon September 12 2011
+0.24  Fri January 17 2012
 
   Added a pod entry for dbix_l4p_logmask which I'd accidentally
   omitted.

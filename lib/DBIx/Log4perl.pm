@@ -871,7 +871,7 @@ M. J. Evans, E<lt>mjevans@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 by M. J. Evans
+Copyright (C) 2006 - 2012 by M. J. Evans
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.7 or,
