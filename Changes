@@ -1,5 +1,12 @@
 Revision history for Perl extension DBIx::Log4perl.
 
+0.25  Thu July 5 2012
+
+  [Bug Fixes]
+
+  Fixed RT 78226 - clone method takes attribute hash but it was
+  not passed on to DBI or logged.
+
 0.24  Fri January 17 2012
 
   Added a pod entry for dbix_l4p_logmask which I'd accidentally

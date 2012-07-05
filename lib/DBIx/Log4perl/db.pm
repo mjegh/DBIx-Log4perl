@@ -322,14 +322,14 @@ sub connected {
 
 }
 sub clone {
-    my $dbh = shift;
+    my ($dbh, @args) = @_;
 
     my $h = $dbh->{private_DBIx_Log4perl};
     if ($h->{logmask} & DBIX_L4P_LOG_CONNECT) {
-        $dbh->_dbix_l4p_debug($h, 2, "clone($h->{dbh_no})");
+        $dbh->_dbix_l4p_debug($h, 2, "clone($h->{dbh_no})", @args);
     }
 
-    return $dbh->SUPER::clone;
+    return $dbh->SUPER::clone(@args);
 }
 
 sub disconnect {
@@ -424,8 +424,10 @@ sub _error_handler {
             goto FINISH;
         }
     }
-    # start with error message
+    # start with error message, state and err
     $out .=  '  ' . '=' x 60 . "\n  $msg\n";
+    $out .= "err() = " . $handle->err . "\n";
+    $out .= "state() = " . $handle->state . "\n";
 
     if ($DBI::lasth) {
 	$out .= "  lasth type: $DBI::lasth->{Type}\n"
