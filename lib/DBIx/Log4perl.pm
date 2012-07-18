@@ -322,7 +322,7 @@ delaying the logging of bind_param (see L</DBIX_L4P_LOG_DELAYBINDPARAM>).
 
 Log at Log4perl debug level input SQL to C<do>, C<prepare>, select*
 methods and any value returned from C<last_insert_id>. In addition, if
-the SQL is an insert/update/delete statement the rows afffected will
+the SQL is an insert/update/delete statement the rows affected will
 be logged.
 
 NOTE: Many databases return 0 rows affected for DDL statements like
