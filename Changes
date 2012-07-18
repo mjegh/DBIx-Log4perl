@@ -1,5 +1,13 @@
 Revision history for Perl extension DBIx::Log4perl.
 
+0.26  Wed July 18 2012
+
+  [Enhancements]
+
+  Add DBIX_L4P_LOG_SQL mask and changed DBIx::Log4perl so when
+  DBIX_L4P_LOG_SQL | DBIX_L4P_LOG_DELAYBINDPARAM are used together you
+  ONLY get SQL and parameters logged.
+
 0.25  Thu July 5 2012
 
   [Bug Fixes]

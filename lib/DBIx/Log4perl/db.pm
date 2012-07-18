@@ -52,7 +52,7 @@ sub prepare {
 
     my $h = $dbh->{private_DBIx_Log4perl};
     my $ctr = $h->{new_stmt_no}(); # get a new unique stmt counter in this dbh
-    if (($h->{logmask} & DBIX_L4P_LOG_INPUT) &&
+    if (($h->{logmask} & (DBIX_L4P_LOG_INPUT|DBIX_L4P_LOG_SQL)) &&
             (caller !~ /^DBIx::Log4perl/o) &&
                 (caller !~ /^DBD::/o)) { # e.g. from selectall_arrayref
         $dbh->_dbix_l4p_debug($h, 2, "prepare($h->{dbh_no}.$ctr)", $args[0]);
@@ -72,7 +72,7 @@ sub prepare_cached {
 
     my $h = $dbh->{private_DBIx_Log4perl};
     my $ctr = $h->{new_stmt_no}();
-    if (($h->{logmask} & DBIX_L4P_LOG_INPUT) &&
+    if (($h->{logmask} & (DBIX_L4P_LOG_INPUT|DBIX_L4P_LOG_SQL)) &&
             (caller !~ /^DBIx::Log4perl/o) &&
                 (caller !~ /^DBD::/o)) { # e.g. from selectall_arrayref
         $dbh->_dbix_l4p_debug($h, 2,
@@ -93,7 +93,7 @@ sub do {
 
     $h->{Statement} = $args[0];
     $dbh->_dbix_l4p_debug($h, 2, "do($h->{dbh_no})", @args)
-        if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+        if ($h->{logmask} & (DBIX_L4P_LOG_INPUT|DBIX_L4P_LOG_SQL));
 
     my $affected = $dbh->SUPER::do(@args);
 
@@ -117,7 +117,7 @@ sub selectrow_array {
 
     my $h = $dbh->{private_DBIx_Log4perl};
 
-    if ($h->{logmask} & DBIX_L4P_LOG_INPUT) {
+    if ($h->{logmask} & (DBIX_L4P_LOG_INPUT|DBIX_L4P_LOG_SQL)) {
         if ((scalar(@args) > 0) && (ref $args[0])) {
             $dbh->_dbix_l4p_debug($h,
                 2,
@@ -148,7 +148,7 @@ sub selectrow_arrayref {
 
     my $h = $dbh->{private_DBIx_Log4perl};
 
-    if ($h->{logmask} & DBIX_L4P_LOG_INPUT) {
+    if ($h->{logmask} & (DBIX_L4P_LOG_INPUT|DBIX_L4P_LOG_SQL)) {
         if ((scalar(@args) > 0) && (ref $args[0])) {
             $dbh->_dbix_l4p_debug(
                 $h, 2,
@@ -171,7 +171,7 @@ sub selectrow_hashref {
 
     my $h = $dbh->{private_DBIx_Log4perl};
 
-    if ($h->{logmask} & DBIX_L4P_LOG_INPUT) {
+    if ($h->{logmask} & (DBIX_L4P_LOG_INPUT|DBIX_L4P_LOG_SQL)) {
         if ((scalar(@args) > 0) && (ref $args[0])){
             $dbh->_dbix_l4p_debug(
                 $h, 2,
@@ -193,7 +193,7 @@ sub selectall_arrayref {
     my ($dbh, @args) = @_;
 
     my $h = $dbh->{private_DBIx_Log4perl};
-    if ($h->{logmask} & DBIX_L4P_LOG_INPUT) {
+    if ($h->{logmask} & (DBIX_L4P_LOG_INPUT|DBIX_L4P_LOG_SQL)) {
         if ((scalar(@args) > 0) && (ref $args[0])) {
             $dbh->_dbix_l4p_debug(
                 $h, 2,
@@ -215,7 +215,7 @@ sub selectall_hashref {
     my ($dbh, @args) = @_;
 
     my $h = $dbh->{private_DBIx_Log4perl};
-    if ($h->{logmask} & DBIX_L4P_LOG_INPUT) {
+    if ($h->{logmask} & (DBIX_L4P_LOG_INPUT|DBIX_L4P_LOG_SQL)) {
         if ((scalar(@args) > 0) && (ref $args[0])) {
             $dbh->_dbix_l4p_debug(
                 $h, 2,

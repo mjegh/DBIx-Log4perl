@@ -15,7 +15,7 @@ sub finish {
 
     $sth->_dbix_l4p_debug($h, 2,
                           "finish($h->{dbh_no}.$sth->{private_DBIx_st_no})")
-	if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+        if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
     return $sth->SUPER::finish;
 }
 
@@ -32,9 +32,9 @@ sub execute {
     my $sth = shift;
     my $h = $sth->{private_DBIx_Log4perl};
 
-    if (($h->{logmask} & DBIX_L4P_LOG_INPUT) &&
-	(caller !~ /^DBD::/o) &&
-	(!$h->{dbd_specific})) {
+    if (($h->{logmask} & (DBIX_L4P_LOG_INPUT|DBIX_L4P_LOG_SQL)) &&
+            (caller !~ /^DBD::/o) &&
+                (!$h->{dbd_specific})) {
         my $params;
         #if (defined($sth->{ParamValues})) {
         #    $params = '{params => ';
@@ -43,20 +43,20 @@ sub execute {
         #    }
         #    $params .= '}';     # TO_DO not used yet
         #}
-	if (scalar(@_)) {
-	    $sth->_dbix_l4p_debug(
+        if (scalar(@_)) {
+            $sth->_dbix_l4p_debug(
                 $h, 2,
                 "execute($h->{dbh_no}.$sth->{private_DBIx_st_no}) (" .
                     ($sth->{Statement} ? $sth->{Statement} : '') . ')', @_);
-	} else {
+        } else {
             my @param_info;
             push @param_info, $sth->{ParamValues}, $sth->{ParamTypes}
                 if ($h->{logmask} & DBIX_L4P_LOG_DELAYBINDPARAM);
-	    $sth->_dbix_l4p_debug(
+            $sth->_dbix_l4p_debug(
                 $h, 2,
                 "execute($h->{dbh_no}.$sth->{private_DBIx_st_no})",
                 @param_info);
-	}
+        }
     }
 
     my $ret = $sth->SUPER::execute(@_);
@@ -122,15 +122,15 @@ sub execute_array {
     my $h = $sth->{private_DBIx_Log4perl};
 
     $sth->_dbix_l4p_debug($h, 2,
-        "execute_array($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args)
+                          "execute_array($h->{dbh_no}.$sth->{private_DBIx_st_no})", @args)
         if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
 
     if (($#args >= 0) && ($args[0]) &&
-	    (ref($args[0]) eq 'HASH') &&
-		(!exists($args[0]->{ArrayTupleStatus}))) {
-	$args[0]->{ArrayTupleStatus} = \my @tuple_status;
+            (ref($args[0]) eq 'HASH') &&
+                (!exists($args[0]->{ArrayTupleStatus}))) {
+        $args[0]->{ArrayTupleStatus} = \my @tuple_status;
     } elsif (!$args[0]) {
-	$args[0] = {ArrayTupleStatus => \my @tuple_status};
+        $args[0] = {ArrayTupleStatus => \my @tuple_status};
     }
     my $array_tuple_status = $args[0]->{ArrayTupleStatus};
 
@@ -148,38 +148,38 @@ sub execute_array {
     my ($executed, $affected) = $sth->SUPER::execute_array(@args);
     if (!$executed) {
         #print Data::Dumper->Dump([$sth->{ParamArrays}], ['ParamArrays']), "\n";
-	if (!$h->{logmask} & DBIX_L4P_LOG_ERRORS) {
-	    return $executed unless wantarray;
-	    return ($executed, $affected);
-	}
+        if (!$h->{logmask} & DBIX_L4P_LOG_ERRORS) {
+            return $executed unless wantarray;
+            return ($executed, $affected);
+        }
         my $pa = $sth->{ParamArrays};
-	$sth->_dbix_l4p_error(2, "execute_array error:");
-	for my $n (0..@{$array_tuple_status}-1) {
-	    next if (!ref($array_tuple_status->[$n]));
-	    $sth->_dbix_l4p_error('Error', $array_tuple_status->[$n]);
-	    my @plist;
-	    foreach my $p (keys %{$pa}) {
-	        if (ref($pa->{$p})) {
-		    push @plist, $pa->{$p}->[$n];
-		} else {
-		    push @plist, $pa->{$p};
-		}
-	    }
+        $sth->_dbix_l4p_error(2, "execute_array error:");
+        for my $n (0..@{$array_tuple_status}-1) {
+            next if (!ref($array_tuple_status->[$n]));
+            $sth->_dbix_l4p_error('Error', $array_tuple_status->[$n]);
+            my @plist;
+            foreach my $p (keys %{$pa}) {
+                if (ref($pa->{$p})) {
+                    push @plist, $pa->{$p}->[$n];
+                } else {
+                    push @plist, $pa->{$p};
+                }
+            }
             $sth->_dbix_l4p_error(
                 2, sub {"\t for " . join(',', map(DBI::neat($_), @plist))});
-	}
+        }
     } elsif ($executed) {
-	if ((defined($sth->{NUM_OF_FIELDS})) || # result-set
-		!($h->{logmask} & DBIX_L4P_LOG_INPUT)) { # logging input
-	    return $executed unless wantarray;
-	    return ($executed, $affected);
-	}
-	$sth->_dbix_l4p_debug($h, 2, "executed $executed, affected " .
-				  DBI::neat($affected));
+        if ((defined($sth->{NUM_OF_FIELDS})) ||  # result-set
+                !($h->{logmask} & DBIX_L4P_LOG_INPUT)) { # logging input
+            return $executed unless wantarray;
+            return ($executed, $affected);
+        }
+        $sth->_dbix_l4p_debug($h, 2, "executed $executed, affected " .
+                                  DBI::neat($affected));
     }
     $sth->_dbix_l4p_debug($h, 2, sub {Data::Dumper->Dump(
-	[$array_tuple_status], ['ArrayTupleStatus'])})
-	if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
+        [$array_tuple_status], ['ArrayTupleStatus'])})
+        if ($h->{logmask} & DBIX_L4P_LOG_INPUT);
     return $executed unless wantarray;
     return ($executed, $affected);
 }
@@ -201,7 +201,8 @@ sub bind_param_inout {
     my $sth = shift;
     my $h = $sth->{private_DBIx_Log4perl};
 
-    $sth->_dbix_l4p_debug($h, 2,
+    $sth->_dbix_l4p_debug(
+        $h, 2,
         "bind_param_inout($h->{dbh_no}.$sth->{private_DBIx_st_no})", @_)
         if (($h->{logmask} & DBIX_L4P_LOG_INPUT) && (caller !~ /^DBD::/o));
     return $sth->SUPER::bind_param_inout(@_);
