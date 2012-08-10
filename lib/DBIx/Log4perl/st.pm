@@ -83,19 +83,19 @@ sub execute {
         ($h->{logmask} & DBIX_L4P_LOG_DBDSPECIFIC) &&
     	($h->{driver} eq 'Oracle') && (!$h->{dbd_specific})) {
 
-	my ($errstr, $err, $state) = (
-	    $sth->errstr, $sth->err, $sth->state);
+        my ($errstr, $err, $state) = (
+            $sth->errstr, $sth->err, $sth->state);
     	$h->{dbd_specific} = 1;
     	my $dbh = $sth->FETCH('Database');
 
         my @lines = $dbh->func('dbms_output_get');
     	$sth->_dbix_l4p_debug($h, 2, 'dbms', @lines) if (scalar(@lines) > 0);
     	$h->{dbd_specific} = 0;
-	{
-	    local $sth->{HandleError} = undef;
-	    local $sth->{HandleSetErr} = undef;
-	    $sth->set_err($err, $errstr, $state);
-	}
+        {
+            local $sth->{HandleError} = undef;
+            local $sth->{HandleSetErr} = undef;
+            $sth->set_err($err, $errstr, $state);
+        }
     }
 
     if (!$ret) {		# error

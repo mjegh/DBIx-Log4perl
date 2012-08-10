@@ -194,9 +194,9 @@ sub connect {
     if (($h->{logger}->is_debug()) &&
             ($h->{logmask} & DBIX_L4P_LOG_DBDSPECIFIC) &&
                 ($h->{driver} eq 'Oracle')) {
-	$dbh->func('dbms_output_enable');
+        $dbh->func('dbms_output_enable');
     } else {
-	$h->{logmask} &= ~DBIX_L4P_LOG_DBDSPECIFIC;
+        $h->{logmask} &= ~DBIX_L4P_LOG_DBDSPECIFIC;
     }
     $h->{dbd_specific} = 0;
     return $dbh;
