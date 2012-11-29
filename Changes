@@ -1,5 +1,11 @@
 Revision history for Perl extension DBIx::Log4perl.
 
+0.27  NNN NNNN NN NNNN
+
+  [MISCELLANEOUS]
+
+  Added repository to META file.
+
 0.26  Wed July 18 2012
 
   [Enhancements]
