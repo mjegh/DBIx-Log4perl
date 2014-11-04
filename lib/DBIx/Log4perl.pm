@@ -261,7 +261,7 @@ DBIx::Log4perl adds the following methods over DBI.
 
 =head2 dbix_l4p_getattr
 
-  $h->dbxi_l4p_getattr('dbix_l4p_logmask');
+  $h->dbix_l4p_getattr('dbix_l4p_logmask');
 
 Returns the value for a DBIx::Log4perl attribute (see L</ATTRIBUTES>).
 
